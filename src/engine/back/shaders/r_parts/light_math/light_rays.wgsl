@@ -38,7 +38,7 @@ fn calculate_ray(light: Light, position: vec2<f32>, depth: f32, normals: vec3<f3
     var softness = light.lerp_attributes3[1];
     var w = light.screen_position.w;
 
-    let sec_attenuation = clamp(pow(1.0 - dist / range * 2.0 * w, softness), 0.0, 1.0) * intensity;
+    let sec_attenuation = pow(clamp(1.0 - dist / range * 2.0 * w, 0.0, 1.0), softness) * intensity;
 
     if light.lerp_attributes[3] != 0.0 && light.lerp_attributes2[0] != 0.0 && light.lerp_attributes2[2] != 1.0 {
         let PI = 3.14159;
@@ -64,7 +64,7 @@ fn calculate_ray(light: Light, position: vec2<f32>, depth: f32, normals: vec3<f3
 
         let section = floor(r * floor(light.lerp_attributes2[1]));
 
-        if section % floor(light.lerp_attributes2[2]) == 0.0 {
+        if u32 (section) % u32 (floor(light.lerp_attributes2[2])) == 0 {
             range = abs(light.lerp_attributes2[0]);
             intensity = light.lerp_attributes[3] * r_intensity;
             softness = light.lerp_attributes3[0];
@@ -77,7 +77,7 @@ fn calculate_ray(light: Light, position: vec2<f32>, depth: f32, normals: vec3<f3
         }
     }
 
-    let attenuation = clamp(pow(1.0 - dist / range * 2.0 * w, softness), 0.0, 1.0) * intensity;
+    let attenuation = pow(clamp(1.0 - dist / range * 2.0 * w, 0.0, 1.0), softness) * intensity;
     let max_attenuation = max(attenuation, sec_attenuation);
 
     return light.lerp_color.rgb * max_attenuation;
