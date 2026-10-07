@@ -1,11 +1,12 @@
-use wgpu::{Device, Extent3d, FilterMode, Sampler, TextureFormat, TextureUsages, TextureView};
+use wgpu::{Device, Extent3d, FilterMode, MipmapFilterMode, Sampler, TextureFormat, TextureUsages, TextureView};
+use wgpu::wgc::resource::SamplerFilterErrorType::MipmapFilter;
 
 pub struct GlobalTextures {
-    color_texture_size: Extent3d,
-    color_texture_view: TextureView,
+    pub color_texture_size: Extent3d,
+    pub color_texture_view: TextureView,
     
-    color_nearest_sampler: Sampler,
-    color_linear_sampler: Sampler,
+    pub color_nearest_sampler: Sampler,
+    pub color_linear_sampler: Sampler,
 }
 
 impl GlobalTextures {
@@ -37,7 +38,7 @@ impl GlobalTextures {
             address_mode_w: wgpu::AddressMode::Repeat,
             mag_filter: FilterMode::Nearest,
             min_filter: FilterMode::Nearest,
-            mipmap_filter: FilterMode::Nearest,
+            mipmap_filter: MipmapFilterMode::Nearest,
             ..Default::default()
         });
 
@@ -48,7 +49,7 @@ impl GlobalTextures {
             address_mode_w: wgpu::AddressMode::Repeat,
             mag_filter: FilterMode::Linear,
             min_filter: FilterMode::Linear,
-            mipmap_filter: FilterMode::Linear,
+            mipmap_filter: MipmapFilterMode::Linear,
             ..Default::default()
         });
         

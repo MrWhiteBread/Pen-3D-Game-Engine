@@ -183,8 +183,8 @@ pub fn deferred_f(device: &wgpu::Device, buffers: &Buffers, config: &SurfaceConf
 
     let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
         label: Some("deferred fragment pipeline layout"),
-        bind_group_layouts: &[&bind_group_layout, &screen_bind_group_layout],
-        push_constant_ranges: &[],
+        bind_group_layouts: &[Some(&bind_group_layout), Some(&screen_bind_group_layout)],
+        immediate_size: 0,
     });
 
     let pipeline = device.create_render_pipeline(&RenderPipelineDescriptor {
@@ -195,11 +195,11 @@ pub fn deferred_f(device: &wgpu::Device, buffers: &Buffers, config: &SurfaceConf
             entry_point: Some("vs_main"),
             compilation_options: Default::default(),
             buffers: &[
-                VertexBufferLayout {
+                Some(VertexBufferLayout {
                     array_stride: (size_of::<f32>() * 2) as wgpu::BufferAddress,
                     step_mode: VertexStepMode::Vertex,
                     attributes: &wgpu::vertex_attr_array![0 => Float32x2],
-                }
+                })
             ],
         },
         fragment: Some(wgpu::FragmentState {
@@ -221,7 +221,7 @@ pub fn deferred_f(device: &wgpu::Device, buffers: &Buffers, config: &SurfaceConf
         },
         depth_stencil: None,
         multisample: wgpu::MultisampleState::default(),
-        multiview: None,
+        multiview_mask: None,
         cache: None,
     });
 

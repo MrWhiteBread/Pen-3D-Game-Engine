@@ -18,20 +18,6 @@ pub const FAKE_LIGHT: LightType = LightType {
     attributes: [0.0; 4],
     lerp_attributes: [0.0; 4],
     old_attributes: [0.0; 4],
-
-    attributes2: [0.0; 4],
-    lerp_attributes2: [0.0; 4],
-    old_attributes2: [0.0; 4],
-
-    attributes3: [0.0; 4],
-    lerp_attributes3: [0.0; 4],
-    old_attributes3: [0.0; 4],
-
-    attributes4: [0.0, 0.0, 10.0, 10.0],
-    lerp_attributes4: [0.0; 4],
-    old_attributes4: [0.0, 0.0, 10.0, 10.0],
-
-    screen_position: [0.0; 4],
 };
 
 pub const FAKE_VERTEX: Vertex = Vertex {

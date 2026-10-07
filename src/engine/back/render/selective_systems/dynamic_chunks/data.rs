@@ -1,6 +1,7 @@
 use std::collections::{HashSet};
 use indexmap::IndexSet;
-use crate::engine::back::render::selective_systems::dynamic_chunks::registry::{DataRegistry, DataRegistryArray, DataRegistryPlus, LidRegistry, LidRegistryArray};
+use wgpu::Extent3d;
+use crate::engine::back::render::selective_systems::dynamic_chunks::registry::{DataRegistry, DataRegistryArray, DataRegistryPlus, LidRegistry, LidRegistryArray, LidRegistryTexture};
 use crate::engine::back::render::selective_systems::fakes::{FAKE_INDEX, FAKE_LIGHT, FAKE_OBJECT, FAKE_VERTEX};
 use crate::engine::back::types::light::LightType;
 use crate::engine::back::types::object::Object;
@@ -15,6 +16,8 @@ pub struct Chunk {
     pub objects: HashSet<u32>,
     pub vertices: HashSet<u32>,
     pub indices: HashSet<u32>,
+
+    pub textures: HashSet<u32>,
 }
 
 pub struct LID {
@@ -24,10 +27,12 @@ pub struct LID {
     pub objects: LidRegistry<Object>,
     pub vertices: LidRegistryArray<Vertex>,
     pub indices: LidRegistryArray<u32>,
+
+    pub textures: LidRegistryTexture,
 }
 
 impl LID {
-    pub fn new(default_space: [usize; 4]) -> Self {
+    pub fn new(default_space: [usize; 4], atlas_size: Extent3d, atlas_chunks_size: usize) -> Self {
         Self {
             chunks: IndexSet::new(),
 
@@ -35,6 +40,8 @@ impl LID {
             objects: LidRegistry::new(default_space[1], FAKE_OBJECT),
             vertices: LidRegistryArray::new(default_space[2], FAKE_VERTEX),
             indices: LidRegistryArray::new(default_space[3], FAKE_INDEX),
+
+            textures: LidRegistryTexture::new(atlas_size, atlas_chunks_size),
         }
     }
 }

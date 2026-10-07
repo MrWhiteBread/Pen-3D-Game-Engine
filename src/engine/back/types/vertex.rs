@@ -13,7 +13,7 @@ pub struct Vertex {
     pub material: [f32; 2],
     pub old_material: [f32; 2],
     pub uv: [f32; 2],
-    pub old_uv: [f32; 2],
+    pub old_uv: [f32; 2], //TODO: move material to object
     
     pub skeleton: u32,
 }

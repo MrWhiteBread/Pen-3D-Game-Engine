@@ -32,10 +32,6 @@ fn compute_main(@builtin(global_invocation_id) id: vec3<u32>) {
     light.lerp_rotation = mix(light.old_rotation, light.rotation, globals.t);
     light.lerp_color = mix(light.old_color, light.color, globals.t);
     light.lerp_attributes = mix(light.old_attributes, light.attributes, globals.t);
-    light.lerp_attributes2 = mix(light.old_attributes2, light.attributes2, globals.t);
-    light.lerp_attributes3 = mix(light.old_attributes3, light.attributes3, globals.t);
-    light.lerp_attributes4 = mix(light.old_attributes4, light.attributes4, globals.t);
-    light.screen_position = camera.view_proj * light.lerp_position;
 
     lights[idx] = light;
 

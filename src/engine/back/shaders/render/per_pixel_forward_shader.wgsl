@@ -20,6 +20,5 @@ var rays_texture: texture_storage_2d<rgba16float, write>;
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    calculate_light_rays(in.position.xy, 1.0, vec3<f32>(0.0), vec3<f32>(0.0));
     return vec4<f32>(0.0, 0.0, 0.0, 1.0);
 }

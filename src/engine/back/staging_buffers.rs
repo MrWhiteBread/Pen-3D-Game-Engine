@@ -28,6 +28,9 @@ pub struct StagingBuffers {
     pub indices_dest_offset: u64,
     pub object_dest_offset: u64,
     pub light_dest_offset: u64,
+
+    pub color_texture_view: wgpu::TextureView,
+    pub color_texture_size: wgpu::Extent3d,
 }
 
 impl StagingBuffers {
@@ -57,6 +60,9 @@ impl StagingBuffers {
             indices_dest_offset: self.indices_dest_offset.clone(),
             object_dest_offset: self.object_dest_offset.clone(),
             light_dest_offset: self.light_dest_offset.clone(),
+
+            color_texture_view: self.color_texture_view.clone(),
+            color_texture_size: self.color_texture_size.clone(),
         }
     }
 }

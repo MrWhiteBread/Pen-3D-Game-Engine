@@ -2,12 +2,12 @@
 
 use std::collections::HashSet;
 use winit::event::MouseButton;
-use winit::keyboard::{Key, NamedKey, SmolStr};
+use winit::keyboard::{{PhysicalKey}};
 
 pub struct InputHandler {
     left_click: bool,
 
-    pub pressed_keys: HashSet<Key>,
+    pub pressed_keys: HashSet<PhysicalKey>,
 }
 
 impl InputHandler {
@@ -29,13 +29,12 @@ impl InputHandler {
         }
     }
 
-    pub fn update_keys(&mut self, key: Key, pressed: bool) {
+    pub fn update_keys(&mut self, key: PhysicalKey, pressed: bool) {
         if pressed {
             self.pressed_keys.insert(key.clone());
         } else {
             self.pressed_keys.remove(&key);
         }
-        //Key::Named(NamedKey::ArrowUp) => self.up = pressed,
     }
 
     pub fn update_mouse(&mut self, button: MouseButton, pressed: bool) {

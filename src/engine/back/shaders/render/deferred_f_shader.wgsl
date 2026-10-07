@@ -37,7 +37,6 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let depth = textureLoad(depth_texture, pixel_coords, 0);
 
     if depth >= 1.0 {
-        calculate_light_rays(in.position.xy, depth, vec3<f32>(0.0), vec3<f32>(0.0));
         return vec4<f32>(0.0);
     }
 
@@ -57,7 +56,6 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     vertex.color = data2.rgb;
 
     vertex.uv = textureLoad(uv_texture, pixel_coords, 0).xy;
-    calculate_light_rays(in.position.xy, depth, vertex.world_normal, vertex.world_position);
 
     return vec4<f32>(get_colour(vertex), 1.0);
 }

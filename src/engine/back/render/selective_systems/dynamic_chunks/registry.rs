@@ -1,5 +1,8 @@
 use std::collections::HashMap;
+use wgpu::Extent3d;
+use wgpu::naga::BuiltIn::Position;
 use crate::engine::back::render::selective_systems::id::{Id32, Id32Range};
+use crate::engine::back::render::selective_systems::texture_atlas::TextureAtlas;
 
 pub struct DataRegistryArray<T> {
     pub type_: HashMap<u32, Vec<T>>,
@@ -83,6 +86,20 @@ impl<T: Clone> LidRegistryArray<T> {
         Self {
             type_: vec![fake; default_space],
             ids: Id32Range::new(),
+        }
+    }
+}
+
+pub struct LidRegistryTexture {
+    pub atlas_texture: TextureAtlas,
+    pub chunks_size: usize,
+}
+
+impl LidRegistryTexture {
+    pub fn new(size: Extent3d, chunks_size: usize) -> Self {
+        Self {
+            atlas_texture: TextureAtlas::new(size),
+            chunks_size,
         }
     }
 }

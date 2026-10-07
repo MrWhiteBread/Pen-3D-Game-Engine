@@ -31,7 +31,6 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     vertex.material = in.material;
     vertex.uv = in.uv;
     vertex.texture_id = in.texture_id;
-    calculate_light_rays(in.position.xy, in.position.z, vertex.world_normal, vertex.world_position);
 
     return vec4<f32>(get_colour(vertex), 1.0);
 }

@@ -3,7 +3,7 @@ use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use arc_swap::{ArcSwap};
 use atomic_float::{AtomicF32, AtomicF64};
 use tokio::time::Instant;
-use winit::keyboard::{Key, NamedKey};
+use winit::keyboard::{Key, KeyCode, NamedKey, PhysicalKey};
 use crate::engine::back::key_handler::InputHandler;
 use crate::engine::back::render::render::Render;
 use crate::engine::back::staging_buffers::StagingBuffers;
@@ -141,47 +141,41 @@ pub struct UpdateVar {
 
 #[allow(dead_code)]
 impl UpdateVar {
-    pub fn fullscreen(&mut self) {
+    pub fn lock_cursor(&mut self) {
         let lock_mouse = self.cursor_locked.load(Ordering::Relaxed);
 
-        let fullscreen = if self.key_handler.pressed_keys.contains(&Key::Named(NamedKey::F11)) && !self.f11{
+        let fullscreen = if self.key_handler.pressed_keys.contains(&PhysicalKey::Code(KeyCode::F11)) && !self.f11 {
             self.f11 = true;
 
             !lock_mouse
-        } else if !self.key_handler.pressed_keys.contains(&Key::Named(NamedKey::F11)) {
+        } else if !self.key_handler.pressed_keys.contains(&PhysicalKey::Code(KeyCode::F11)) {
             self.f11 = false;
             lock_mouse
         } else {
             lock_mouse
         };
 
-        if fullscreen {
-            self.cursor_locked.store(true, Ordering::Relaxed);
-        } else {
-            self.cursor_locked.store(false, Ordering::Relaxed);
-        }
+        self.cursor_locked.store(fullscreen, Ordering::Relaxed);
     }
 
-    pub fn is_fullscreen(&self) -> bool {
+    pub fn is_cursor_locked(&self) -> bool {
         self.cursor_locked.load(Ordering::Relaxed)
     }
 
-    pub fn add_camera_to_cursor(&self, camera: &mut Camera, dpi: f32) {
-        if self.is_fullscreen() {
-            let dpi = dpi / 1000.0;
+    pub fn add_camera_to_cursor(&self, camera: &mut Camera, sensitivity: f32) {
+        let dpi = sensitivity / 1000.0;
 
-            let cursor_y = self.cursor_y.load(Ordering::Relaxed);
-            let cursor_x = self.cursor_x.load(Ordering::Relaxed);
+        let cursor_y = self.cursor_y.load(Ordering::Relaxed);
+        let cursor_x = self.cursor_x.load(Ordering::Relaxed);
 
-            self.cursor_y.store(0.0, Ordering::Relaxed);
-            self.cursor_x.store(0.0, Ordering::Relaxed);
+        self.cursor_y.store(0.0, Ordering::Relaxed);
+        self.cursor_x.store(0.0, Ordering::Relaxed);
 
-            let y = -cursor_y * dpi;
-            let x = -cursor_x * dpi;
+        let y = -cursor_y * dpi;
+        let x = -cursor_x * dpi;
 
-            let rot: [f32; 2] = [y, x];
-            camera.change_rotation(&rot, &true);
-        }
+        let rot: [f32; 2] = [y, x];
+        camera.change_rotation(&rot, &true);
     }
 
     pub fn set_window_x(&mut self, x: i32) {

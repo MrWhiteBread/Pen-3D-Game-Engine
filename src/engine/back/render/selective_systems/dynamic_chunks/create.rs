@@ -15,6 +15,8 @@ impl DynamicChunks {
             objects: HashSet::new(),
             vertices: HashSet::new(),
             indices: HashSet::new(),
+            
+            textures: HashSet::new(),
         };
 
         self.chunks.insert(id, chunk);
@@ -24,11 +26,13 @@ impl DynamicChunks {
         if nearest.distance == 0.0 {
             self.ids.get_mut(&nearest.item).expect("id doesn t exist").insert(id);
             global_id = nearest.item;
+            
         } else {
             let chunks_id = self.create_tree_chunk(position);
             self.ids.get_mut(&chunks_id).expect("id doesn exist").insert(id);
             global_id = chunks_id;
         }
+        
         self.new_chunks.entry(global_id).or_default().insert(id);
 
         id

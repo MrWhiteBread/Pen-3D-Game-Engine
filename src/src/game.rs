@@ -1,5 +1,5 @@
 use glam::Quat;
-use winit::keyboard::{Key, NamedKey, SmolStr};
+use winit::keyboard::{Key, KeyCode, NamedKey, PhysicalKey, SmolStr};
 use crate::engine::back::render::render::Render;
 use crate::engine::back::render::scene::Scene;
 use crate::engine::back::types::object::Object;
@@ -43,9 +43,9 @@ impl Game {
         model1.load(&scene);
 
 
-        for i in 0..60 {
-            for j in 0..60 {
-                for k in 0..5 {
+        for i in 0..80 {
+            for j in 0..80 {
+                for k in 0..20 {
                     let object12 = Object::new(&[i as f32 * 2.0, k as f32 * -2.0, j as f32 * 2.0], &[0.0, 0.0, 0.0], &[1.0, 1.0, 1.0]);
                     let mut cuboid12 = cuboid(&[1.5, 1.5, 1.5], &[0.1, 1.0, 0.2, 1.0], &METAL);
                     randomise(&mut cuboid12, -0.5..0.5);
@@ -57,22 +57,9 @@ impl Game {
         }
 
         let mut light = Light::new([9.0, 8.0, 9.0], [0.0, 0.0, 0.0], [0.5, 0.0, 1.0, 1.0], 1.0, 21.0, 360.0);
-        light.set_rays_intensity(&1.9, &false);
-        light.set_rays_fog_intensity(&1.1, &false);
-        light.set_rays_range(&2.6, &false);
-        light.set_rays_fog_range(&12.3, &false);
-        light.set_rays_count(&2, &false);
-        light.set_rays_size(&0.01, &false);
-        light.set_rays_softness(&9.0, &false);
-        light.set_rays_fog_softness(&12.0, &false);
-        light.set_rays_seed(&9525);
-        light.set_rays_r_angle_roughness(&3.0);
-        light.set_rays_r_empty_delta(&0.5);
-        light.set_rays_r_angle_mod(&100000.0);
-        light.set_rays_r_angle_div(&100.0);
         light.load(&scene);
 
-        let mut light = Light::new([1000.0, 0.0, 0.0], [0.0, 0.0, 0.0], [1.0, 0.2, 1.0, 0.5], 1.2, 30.0, 360.0);
+        let mut light = Light::new([0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [1.0, 0.2, 1.0, 0.5], 1.2, 30.0, 360.0);
         light.load(&scene);
 
         Self {
@@ -85,8 +72,10 @@ impl Game {
     }
 
     pub fn update(&mut self, update_var: &mut UpdateVar) {
-        update_var.fullscreen();
-        update_var.add_camera_to_cursor(&mut self.camera, 4.6);
+        update_var.lock_cursor();
+        if update_var.is_cursor_locked() {
+            update_var.add_camera_to_cursor(&mut self.camera, 0.8);
+        }
 
         if update_var.tick_count == 60 {
             println!("FPS: {}", update_var.fps);
@@ -106,32 +95,32 @@ impl Game {
 
         for key in update_var.key_handler.pressed_keys.iter() {
             match key {
-                Key::Character(c) if *c == SmolStr::new("h") && self.scene.get_scene_light() <= 1.0 - scene_light_speed => {
+                PhysicalKey::Code(KeyCode::KeyH) if self.scene.get_scene_light() <= 1.0 - scene_light_speed => {
                     self.scene.change_scene_light(&scene_light_speed, &true)
                 }
-                Key::Character(c) if *c == SmolStr::new("j") && self.scene.get_scene_light() >= scene_light_speed => {
+                PhysicalKey::Code(KeyCode::KeyJ) if self.scene.get_scene_light() >= scene_light_speed => {
                     self.scene.change_scene_light(&-scene_light_speed, &true);
                 }
 
-                Key::Named(NamedKey::Space) => {
+                PhysicalKey::Code(KeyCode::Space) => {
                     self.camera.change_pos(&[0.0, speed, 0.0], &true);
                     self.light.change_pos(&[0.0, speed, 0.0], &true)
                 }
-                Key::Named(NamedKey::Shift) => {
+                PhysicalKey::Code(KeyCode::ShiftLeft) => {
                     self.camera.change_pos(&[0.0, -speed, 0.0], &true);
                     self.light.change_pos(&[0.0, -speed, 0.0], &true)
                 }
 
-                Key::Character(c) if *c == SmolStr::new("w") => {
+                PhysicalKey::Code(KeyCode::KeyW) => {
                     Self::move_along_rotation(&speed, &rotation, &mut pos, glam::Vec3::Z);
                 }
-                Key::Character(c) if *c == SmolStr::new("a") => {
+                PhysicalKey::Code(KeyCode::KeyA) => {
                     Self::move_along_rotation(&speed, &rotation, &mut pos, glam::Vec3::X);
                 }
-                Key::Character(c) if *c == SmolStr::new("s") => {
+                PhysicalKey::Code(KeyCode::KeyS) => {
                     Self::move_along_rotation(&-speed, &rotation, &mut pos, glam::Vec3::Z);
                 }
-                Key::Character(c) if *c == SmolStr::new("d") => {
+                PhysicalKey::Code(KeyCode::KeyD) => {
                     Self::move_along_rotation(&-speed, &rotation, &mut pos, glam::Vec3::X);
                 }
 
@@ -140,7 +129,7 @@ impl Game {
         }
 
         self.camera.change_pos(&pos, &true);
-        //self.light.change_pos(&pos, &true);
+        self.light.change_pos(&pos, &true);
         self.model.change_rot(&[0.0, 1.0, 0.0], true);
 
         let camera_pos = self.camera.get_pos();

@@ -9,7 +9,6 @@ pub struct Shaders<'a> {
     pub deferred_vertex: &'a str,
     pub deferred_fragment: &'a str,
 
-    pub light_rays: &'a str,
     pub mipmap: &'a str,
 }
 
@@ -50,8 +49,7 @@ impl<'a> Shaders<'a> {
             include_str!("shaders\\structs\\object.wgsl"), '\n',
             include_str!("shaders\\structs\\light.wgsl"), '\n',
         
-            include_str!("shaders\\r_parts\\light_math\\light.wgsl"), '\n',
-            include_str!("shaders\\r_parts\\light_math\\light_rays.wgsl"), '\n',
+            include_str!("shaders\\r_parts\\light.wgsl"), '\n',
             include_str!("shaders\\r_parts\\colours.wgsl"), '\n',
 
             include_str!("shaders\\render\\vs_main.wgsl"), '\n',
@@ -62,8 +60,6 @@ impl<'a> Shaders<'a> {
             include_str!("shaders\\structs\\globals.wgsl"), '\n',
             include_str!("shaders\\structs\\camera.wgsl"), '\n',
             include_str!("shaders\\structs\\light.wgsl"), '\n',
-
-            include_str!("shaders\\r_parts\\light_math\\light_rays.wgsl"), '\n',
 
             include_str!("shaders\\render\\vs_main_fill.wgsl"), '\n',
             include_str!("shaders\\render\\per_pixel_forward_shader.wgsl"),
@@ -86,17 +82,11 @@ impl<'a> Shaders<'a> {
             include_str!("shaders\\structs\\camera.wgsl"), '\n',
             include_str!("shaders\\structs\\light.wgsl"), '\n',
 
-            include_str!("shaders\\r_parts\\light_math\\light.wgsl"), '\n',
-            include_str!("shaders\\r_parts\\light_math\\light_rays.wgsl"), '\n',
+            include_str!("shaders\\r_parts\\light.wgsl"), '\n',
             include_str!("shaders\\r_parts\\colours.wgsl"), '\n',
 
             include_str!("shaders\\render\\vs_main_fill.wgsl"), '\n',
             include_str!("shaders\\render\\deferred_f_shader.wgsl"),
-        );
-
-        let light_rays = concat!(
-            include_str!("shaders\\render\\vs_main_fill_uv.wgsl"), '\n',
-            include_str!("shaders\\render\\light_rays.wgsl"),
         );
 
         let mipmap = concat!(
@@ -115,7 +105,6 @@ impl<'a> Shaders<'a> {
             deferred_vertex,
             deferred_fragment,
 
-            light_rays,
             mipmap,
         }
     }

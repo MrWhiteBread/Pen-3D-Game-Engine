@@ -4,34 +4,16 @@ mod data;
 mod create;
 mod types;
 
-use std::cell::RefCell;
 use std::collections::{BTreeSet, HashMap, HashSet};
-use std::rc::Rc;
 use indexmap::{IndexMap, IndexSet};
 use kiddo::SquaredEuclidean;
-use wgpu::{Buffer, Queue};
+use wgpu::{Buffer, Extent3d, Queue};
 use crate::engine::back::render::selective_systems::dynamic_chunks::data::*;
 use crate::engine::back::render::selective_systems::id::{Id32};
 use crate::engine::back::staging_buffers::StagingBuffers;
 
 pub struct DynamicChunks {
-    // lid - loaded ids
-    // tdl - to delete
-
-    /*
-    TODO:
-            - add swap_remove on object and lights (rethink if i need objects order) and for this i need backwards id searching by keeping a hashMap of index -> id
-            = add a loaded data counter for testing, since i can t see real object count, AND A COUNTER that counts the unused too, basically it doesn t count the extra stuff and thats all,
-        and i have to i think send this counter to the object count so the command buffer doesn t do useless iterations, and with swap remove is perfect,
-            - test everything to be sure its working
-            - after adding swap_remove to light remove fake_lights since its useless
-            - make the id system and the vector to talk with eachother to scale proprely dynamic or idk just find an idea
-
-
-
-            when making objects use the same vertices and indices in chunks play normal using ids like its a different one and when removing it has a number of USED_BY_OBJECTS and when that hits 0 i remove until then i just --, and when adding i just add once and check if its added
-
-     */
+    // lid - loaded ids (l-id)
 
     chunks_size: f32,
 
@@ -61,6 +43,15 @@ impl DynamicChunks {
             1000_000,
         ];
 
+        let atlas_pixel_size = 8192;
+        let atlas_chunks_size = 128;
+
+        let atlas_size = Extent3d {
+            width: atlas_pixel_size / atlas_chunks_size,
+            height: atlas_pixel_size / atlas_chunks_size,
+            depth_or_array_layers: 1,
+        };
+
         Self {
             chunks_size: *chunks_size,
 
@@ -73,7 +64,7 @@ impl DynamicChunks {
             gods: HashMap::new(),
 
             data: Data::new(),
-            lid: LID::new(default_space),
+            lid: LID::new(default_space, atlas_size, atlas_chunks_size as usize),
             usage: Usage::new(),
 
             tree_ids: Id32::new(),
@@ -214,7 +205,6 @@ impl DynamicChunks {
 }
 
 #[allow(dead_code)]
-
 pub struct Usage {
     pub vertices_len: u32,
     pub indices_len: u32,

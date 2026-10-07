@@ -16,20 +16,6 @@ pub struct LightType {
     pub attributes: [f32; 4],
     pub lerp_attributes: [f32; 4],
     pub old_attributes: [f32; 4],
-
-    pub attributes2: [f32; 4],
-    pub lerp_attributes2: [f32; 4],
-    pub old_attributes2: [f32; 4],
-
-    pub attributes3: [f32; 4],
-    pub lerp_attributes3: [f32; 4],
-    pub old_attributes3: [f32; 4],
-
-    pub attributes4: [f32; 4],
-    pub lerp_attributes4: [f32; 4],
-    pub old_attributes4: [f32; 4],
-    
-    pub screen_position: [f32; 4],
 }
 
 impl LightType {
@@ -55,20 +41,6 @@ impl LightType {
             attributes,
             lerp_attributes: [0.0; 4],
             old_attributes: attributes,
-
-            attributes2: [0.0, 1.0, 1.0, 0.0],
-            lerp_attributes2: [0.0; 4],
-            old_attributes2: [0.0, 1.0, 1.0, 0.0],
-
-            attributes3: [1.0, 1.0, 0.0, 0.0],
-            lerp_attributes3: [0.0; 4],
-            old_attributes3: [1.0, 1.0, 0.0, 0.0],
-
-            attributes4: [0.0, 0.0, 10.0, 10.0],
-            lerp_attributes4: [0.0; 4],
-            old_attributes4: [0.0, 0.0, 10.0, 10.0],
-            
-            screen_position: [0.0; 4],
         }
     }
 }

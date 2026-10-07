@@ -45,6 +45,7 @@ impl<'a> State<'a> {
                 }),
                 timestamp_writes: None,
                 occlusion_query_set: None,
+                multiview_mask: None,
             });
 
             render_pass_3d.set_bind_group(0, &self.pipelines.deferred_v.bind_group, &[]);
@@ -82,6 +83,7 @@ impl<'a> State<'a> {
                 depth_stencil_attachment: None,
                 timestamp_writes: None,
                 occlusion_query_set: None,
+                multiview_mask: None,
             });
 
             render_pass_3d.set_bind_group(0, &self.pipelines.deferred_f.bind_group, &[]);
@@ -115,6 +117,7 @@ impl<'a> State<'a> {
                 depth_stencil_attachment: None,
                 timestamp_writes: None,
                 occlusion_query_set: None,
+                multiview_mask: None,
             });
 
             render_pass_3d.set_bind_group(0, &self.pipelines.per_pixel_forward_pass.bind_group, &[]);
@@ -153,6 +156,7 @@ impl<'a> State<'a> {
                 }),
                 timestamp_writes: None,
                 occlusion_query_set: None,
+                multiview_mask: None,
             });
 
             render_pass_3d.set_bind_group(0, &self.pipelines.forward_pass.bind_group, &[]);
@@ -174,68 +178,6 @@ impl<'a> State<'a> {
                 0,
                 *object_count,
             );
-        }
-    }
-
-    pub fn light_rays_rendering(&mut self, encoder: &mut wgpu::CommandEncoder, view: &wgpu::TextureView) {
-        {
-            let mut render_pass_3d = encoder.begin_render_pass(&RenderPassDescriptor {
-                label: Some("Light rays render pass"),
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &self.screen_textures.light_rays_view_scratch,
-                    depth_slice: None,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
-                        store: StoreOp::Store,
-                    },
-                })],
-                depth_stencil_attachment: None,
-                timestamp_writes: None,
-                occlusion_query_set: None,
-            });
-
-            render_pass_3d.set_bind_group(0, &self.pipelines.light_rays_pass.bind_group1, &[]);
-            render_pass_3d.set_pipeline(&self.pipelines.light_rays_pass.pipeline1);
-
-            render_pass_3d.set_vertex_buffer(0, self.black_vertices_buffer.slice(..));
-
-            render_pass_3d.set_index_buffer(
-                self.black_indices_buffer.slice(..),
-                wgpu::IndexFormat::Uint32,
-            );
-
-            render_pass_3d.draw_indexed(0..6, 0, 0..1);
-        }
-
-        {
-            let mut render_pass_3d = encoder.begin_render_pass(&RenderPassDescriptor {
-                label: Some("Light rays render pass"),
-                color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: &view,
-                    depth_slice: None,
-                    resolve_target: None,
-                    ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Load,
-                        store: StoreOp::Store,
-                    },
-                })],
-                depth_stencil_attachment: None,
-                timestamp_writes: None,
-                occlusion_query_set: None,
-            });
-
-            render_pass_3d.set_bind_group(0, &self.pipelines.light_rays_pass.bind_group2, &[]);
-            render_pass_3d.set_pipeline(&self.pipelines.light_rays_pass.pipeline2);
-
-            render_pass_3d.set_vertex_buffer(0, self.black_vertices_buffer.slice(..));
-
-            render_pass_3d.set_index_buffer(
-                self.black_indices_buffer.slice(..),
-                wgpu::IndexFormat::Uint32,
-            );
-
-            render_pass_3d.draw_indexed(0..6, 0, 0..1);
         }
     }
 }

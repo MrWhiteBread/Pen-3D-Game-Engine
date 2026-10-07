@@ -15,9 +15,6 @@ impl DynamicChunks {
             light.old_color = light.color;
             light.old_rotation = light.rotation;
             light.old_attributes = light.attributes;
-            light.old_attributes2 = light.attributes2;
-            light.old_attributes3 = light.attributes3;
-            light.old_attributes4 = light.attributes4;
         });
     }
 

@@ -139,8 +139,8 @@ pub fn forward(device: &wgpu::Device, buffers: &Buffers, config: &SurfaceConfigu
 
     let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
         label: Some("forward render pipeline layout"),
-        bind_group_layouts: &[&bind_group_layout, &screen_bind_group_layout],
-        push_constant_ranges: &[],
+        bind_group_layouts: &[Some(&bind_group_layout), Some(&screen_bind_group_layout)],
+        immediate_size: 0,
     });
 
     let pipeline = device.create_render_pipeline(&RenderPipelineDescriptor {
@@ -151,8 +151,8 @@ pub fn forward(device: &wgpu::Device, buffers: &Buffers, config: &SurfaceConfigu
             entry_point: Some("vs_main"),
             compilation_options: Default::default(),
             buffers: &[
-                Vertex::desc(),
-                VertexBufferLayout {
+                Some(Vertex::desc()),
+                Some(VertexBufferLayout {
                     array_stride: 4,
                     step_mode: VertexStepMode::Instance,
                     attributes: &[VertexAttribute {
@@ -160,7 +160,7 @@ pub fn forward(device: &wgpu::Device, buffers: &Buffers, config: &SurfaceConfigu
                         shader_location: 10,
                         format: VertexFormat::Uint32,
                     }]
-                }
+                })
             ],
         },
         fragment: Some(wgpu::FragmentState {
@@ -182,13 +182,13 @@ pub fn forward(device: &wgpu::Device, buffers: &Buffers, config: &SurfaceConfigu
         },
         depth_stencil: Some(wgpu::DepthStencilState {
             format: TextureFormat::Depth24Plus,
-            depth_write_enabled: true,
-            depth_compare: wgpu::CompareFunction::Less,
+            depth_write_enabled: Some(true),
+            depth_compare: Some(wgpu::CompareFunction::Less),
             stencil: wgpu::StencilState::default(),
             bias: wgpu::DepthBiasState::default(),
         }),
         multisample: wgpu::MultisampleState::default(),
-        multiview: None,
+        multiview_mask: None,
         cache: None,
     });
 

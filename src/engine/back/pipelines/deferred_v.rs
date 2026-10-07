@@ -68,8 +68,8 @@ pub fn deferred_v(device: &wgpu::Device, buffers: &Buffers, shaders: &Shaders) -
 
     let pipeline_layout_ = device.create_pipeline_layout(&PipelineLayoutDescriptor {
         label: Some("Deferred vertex pipeline layout"),
-        bind_group_layouts: &[&bind_group_layout],
-        push_constant_ranges: &[],
+        bind_group_layouts: &[Some(&bind_group_layout)],
+        immediate_size: 0,
     });
 
     let pipeline = device.create_render_pipeline(&RenderPipelineDescriptor {
@@ -80,8 +80,8 @@ pub fn deferred_v(device: &wgpu::Device, buffers: &Buffers, shaders: &Shaders) -
             entry_point: Some("vs_main"),
             compilation_options: Default::default(),
             buffers: &[
-                Vertex::desc(),
-                VertexBufferLayout {
+                Some(Vertex::desc()),
+                Some(VertexBufferLayout {
                     array_stride: 4,
                     step_mode: VertexStepMode::Instance,
                     attributes: &[VertexAttribute {
@@ -89,7 +89,7 @@ pub fn deferred_v(device: &wgpu::Device, buffers: &Buffers, shaders: &Shaders) -
                         shader_location: 10,
                         format: VertexFormat::Uint32,
                     }]
-                }
+                })
             ],
         },
         fragment: Some(wgpu::FragmentState {
@@ -123,13 +123,13 @@ pub fn deferred_v(device: &wgpu::Device, buffers: &Buffers, shaders: &Shaders) -
         },
         depth_stencil: Some(wgpu::DepthStencilState {
             format: TextureFormat::Depth32Float,
-            depth_write_enabled: true,
-            depth_compare: wgpu::CompareFunction::Less,
+            depth_write_enabled: Some(true),
+            depth_compare: Some(wgpu::CompareFunction::Less),
             stencil: wgpu::StencilState::default(),
             bias: wgpu::DepthBiasState::default(),
         }),
         multisample: wgpu::MultisampleState::default(),
-        multiview: None,
+        multiview_mask: None,
         cache: None,
     });
 

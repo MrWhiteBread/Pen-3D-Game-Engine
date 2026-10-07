@@ -1,4 +1,5 @@
 use glam::{Mat4, Quat, Vec3};
+use glam::camera::rh;
 
 #[repr(C)]
 #[derive(Copy, Clone, bytemuck::Pod, bytemuck::Zeroable)]
@@ -76,8 +77,8 @@ impl CameraStructure {
         let forward = self.rotation * Vec3::NEG_Z;
         let up = self.rotation * Vec3::Y;
 
-        let view = Mat4::look_at_rh(self.position, forward + self.position, up);
-        let proj = Mat4::perspective_rh(self.fov_y.to_radians(), self.aspect, self.near, self.far);
+        let view = rh::view::look_at_mat4(self.position, forward + self.position, up);
+        let proj = rh::proj::directx::perspective(self.fov_y.to_radians(), self.aspect, self.near, self.far);
 
         proj * view
     }

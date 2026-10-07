@@ -1,6 +1,6 @@
 use std::sync::Arc;
 use arc_swap::ArcSwap;
-use wgpu::{AdapterInfo, AddressMode, Buffer, BufferAddress, BufferDescriptor, BufferUsages, Device, FilterMode, Queue, Sampler};
+use wgpu::{AdapterInfo, AddressMode, Buffer, BufferAddress, BufferDescriptor, BufferUsages, Device, Extent3d, FilterMode, MipmapFilterMode, Queue, Sampler, TextureView};
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
 use wgpu::wgt::SamplerDescriptor;
 use crate::engine::back::staging_buffers::StagingBuffers;
@@ -40,7 +40,7 @@ pub struct Buffers {
 
 impl Buffers {
     #[allow(unused_variables)]
-    pub fn new(device: &Device, info: &AdapterInfo, queue: Arc<Queue>)-> (Self, StagingBuffers) {
+    pub fn new(device: &Device, info: &AdapterInfo, queue: Arc<Queue>, color_texture_view: TextureView, color_texture_size: Extent3d)-> (Self, StagingBuffers) {
         let safe_max_bytes = 128 * 1024 * 1024;
 
         let max_draw_commands = 20000;
@@ -243,7 +243,7 @@ impl Buffers {
             address_mode_w: AddressMode::ClampToEdge,
             mag_filter: FilterMode::Linear,
             min_filter: FilterMode::Linear,
-            mipmap_filter: FilterMode::Linear,
+            mipmap_filter: MipmapFilterMode::Linear,
 
             ..Default::default()
         });
@@ -299,6 +299,9 @@ impl Buffers {
                 indices_dest_offset: 0,
                 object_dest_offset: 0,
                 light_dest_offset: 0,
+
+                color_texture_view,
+                color_texture_size,
             }
         )
     }

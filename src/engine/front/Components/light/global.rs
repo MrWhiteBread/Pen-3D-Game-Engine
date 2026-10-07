@@ -27,27 +27,4 @@ impl Light {
             self.light.old_rotation[1] = rot[2];
         }
     }
-
-    pub(crate) fn ray_size(&mut self, size: &f32, lerp: &bool) {
-        if let Some(scene) = &mut self.scene {
-            unsafe {
-                let light = scene.get_mut_light(&self.id);
-                light.attributes2[1] /= light.attributes2[2] / size;
-                light.attributes2[2] = *size;
-
-                if !lerp {
-                    light.old_attributes2[1] /= light.attributes2[2] / size;
-                    light.old_attributes2[2] = *size;
-                } else {
-                    scene.light_changed(&self.id);
-                }
-            }
-        } else {
-            self.light.attributes2[1] /= self.light.attributes2[2] / size;
-            self.light.old_attributes2[1] /= self.light.attributes2[2] / size;
-
-            self.light.attributes2[2] = *size;
-            self.light.old_attributes2[2] = *size;
-        }
-    }
 }
