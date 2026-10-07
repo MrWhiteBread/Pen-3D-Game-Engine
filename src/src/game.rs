@@ -20,7 +20,7 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn new(mut render: Render) -> Self {
+    pub fn new(mut render: Render) -> Self { // CODE EXAMPLE:
         let camera = Camera::new(&[0.0, 0.0, 0.0]);
         let mut scene = render.create_scene(&16.0);
         scene.set_camera(&camera);
