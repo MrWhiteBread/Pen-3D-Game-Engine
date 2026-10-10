@@ -41,7 +41,7 @@ impl<'a> State<'a> {
             bytemuck::bytes_of(&0),
         );
 
-        let camera = CameraUniform::new_from_struct(&staging_buffers.camera_structure[0].lerp(&staging_buffers.camera_structure[1], &del_time));
+        let camera = CameraUniform::new_from_struct(&staging_buffers.camera_structure[0].lerp(&staging_buffers.camera_structure[1], del_time));
 
         self.queue.write_buffer(
             &self.buffers.camera_buffer,

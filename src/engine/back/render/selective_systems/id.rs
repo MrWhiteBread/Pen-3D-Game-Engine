@@ -243,7 +243,7 @@ impl Id32 {
         id - 1
     }
 
-    pub fn remove(&mut self, id: &u32) {
+    pub fn remove(&mut self, id: u32) {
         let id = id + 1;
         if !self.ids.contains(&id) {return;}
 

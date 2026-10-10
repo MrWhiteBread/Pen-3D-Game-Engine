@@ -35,7 +35,7 @@ pub struct DynamicChunks {
 }
 
 impl DynamicChunks {
-    pub fn new(chunks_size: &f32) -> Self {
+    pub fn new(chunks_size: f32) -> Self {
         let default_space = [
             1000,
             200_000,
@@ -53,7 +53,7 @@ impl DynamicChunks {
         };
 
         Self {
-            chunks_size: *chunks_size,
+            chunks_size,
 
             tree: kiddo::float::kdtree::KdTree::new(),
             ids: HashMap::new(),

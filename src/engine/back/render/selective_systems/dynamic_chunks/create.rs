@@ -38,8 +38,8 @@ impl DynamicChunks {
         id
     }
 
-    fn apply_jitter(value: &f32, id: &u32) -> f32 {
-        let base_value = if *value == 0.0 { 0.00001 } else { *value };
+    fn apply_jitter(value: f32, id: u32) -> f32 {
+        let base_value = if value == 0.0 { 0.00001 } else { value };
 
         let bits = base_value.to_bits();
         let jittered_bits = bits + (id & 0x7F);
@@ -50,9 +50,9 @@ impl DynamicChunks {
         let chunks = HashSet::new();
 
         let chunks_id = self.tree_ids.get_id();
-        position[0] = Self::apply_jitter(&position[0], &chunks_id);
-        position[1] = Self::apply_jitter(&position[1], &chunks_id);
-        position[2] = Self::apply_jitter(&position[2], &chunks_id);
+        position[0] = Self::apply_jitter(position[0], chunks_id);
+        position[1] = Self::apply_jitter(position[1], chunks_id);
+        position[2] = Self::apply_jitter(position[2], chunks_id);
 
         self.ids.insert(chunks_id, chunks);
 

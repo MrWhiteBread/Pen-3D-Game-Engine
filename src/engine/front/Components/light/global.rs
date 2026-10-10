@@ -1,10 +1,10 @@
 use crate::engine::front::components::light::Light;
 
 impl Light {
-    pub(crate) fn rot(&mut self, rot: &[f32; 3], lerp: &bool) {
+    pub(crate) fn rot(&mut self, rot: &[f32; 3], lerp: bool) {
         if let Some(scene) = &mut self.scene {
             unsafe {
-                let light = scene.get_mut_light(&self.id);
+                let light = scene.get_mut_light(self.id);
                 light.rotation[0] = rot[0];
                 light.rotation[1] = rot[1];
                 light.rotation[2] = rot[2];
@@ -14,7 +14,7 @@ impl Light {
                     light.old_rotation[1] = rot[1];
                     light.old_rotation[2] = rot[2];
                 } else {
-                    scene.light_changed(&self.id);
+                    scene.light_changed(self.id);
                 }
             }
         } else {

@@ -51,13 +51,13 @@ pub struct CameraStructure {
 }
 
 impl CameraStructure {
-    pub fn lerp(&self, camera: &CameraStructure, t: &f32) -> CameraStructure {
-        let position = camera.position.lerp(self.position, *t);
-        let rotation = camera.rotation.slerp(self.rotation, *t);
-        let fov_y = Self::mix(&camera.fov_y, &self.fov_y, t);
-        let aspect = Self::mix(&camera.aspect, &self.aspect, t);
-        let near = Self::mix(&camera.near, &self.near, t);
-        let far = Self::mix(&camera.far, &self.far, t);
+    pub fn lerp(&self, camera: &CameraStructure, t: f32) -> CameraStructure {
+        let position = camera.position.lerp(self.position, t);
+        let rotation = camera.rotation.slerp(self.rotation, t);
+        let fov_y = Self::mix(&camera.fov_y, self.fov_y, t);
+        let aspect = Self::mix(&camera.aspect, self.aspect, t);
+        let near = Self::mix(&camera.near, self.near, t);
+        let far = Self::mix(&camera.far, self.far, t);
 
         CameraStructure {
             position,
@@ -69,7 +69,7 @@ impl CameraStructure {
         }
     }
 
-    fn mix(old: &f32, new: &f32, t: &f32) -> f32 {
+    fn mix(old: &f32, new: f32, t: f32) -> f32 {
         old * (1.0 - t) + new * t
     }
 

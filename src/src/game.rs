@@ -22,9 +22,9 @@ pub struct Game {
 impl Game {
     pub fn new(mut render: Render) -> Self { // CODE EXAMPLE:
         let camera = Camera::new(&[0.0, 0.0, 0.0]);
-        let mut scene = render.create_scene(&16.0);
+        let mut scene = render.create_scene(16.0);
         scene.set_camera(&camera);
-        scene.set_scene_light(&0.12, &false);
+        scene.set_scene_light(0.12, false);
         render.set_scene(scene.clone());
 
         let object1 = Object::new( &[100.0, 0.0, 100.0], &[0.0, 0.0, 0.0], &[1.0, 1.0, 1.0]);
@@ -45,7 +45,7 @@ impl Game {
 
         for i in 0..80 {
             for j in 0..80 {
-                for k in 0..20 {
+                for k in 0..10 {
                     let object12 = Object::new(&[i as f32 * 2.0, k as f32 * -2.0, j as f32 * 2.0], &[0.0, 0.0, 0.0], &[1.0, 1.0, 1.0]);
                     let mut cuboid12 = cuboid(&[1.5, 1.5, 1.5], &[0.1, 1.0, 0.2, 1.0], &METAL);
                     randomise(&mut cuboid12, -0.5..0.5);
@@ -80,6 +80,7 @@ impl Game {
         if update_var.tick_count == 60 {
             println!("FPS: {}", update_var.fps);
             println!("TPS: {}", update_var.tps);
+            
             let usage = self.scene.get_usage();
             println!("vertices len/size: {} / {}", usage.vertices_len, usage.vertices_size);
             println!("objects len/size: {} / {}", usage.objects_len, usage.objects_size);
@@ -96,19 +97,19 @@ impl Game {
         for key in update_var.key_handler.pressed_keys.iter() {
             match key {
                 PhysicalKey::Code(KeyCode::KeyH) if self.scene.get_scene_light() <= 1.0 - scene_light_speed => {
-                    self.scene.change_scene_light(&scene_light_speed, &true)
+                    self.scene.change_scene_light(scene_light_speed, true)
                 }
                 PhysicalKey::Code(KeyCode::KeyJ) if self.scene.get_scene_light() >= scene_light_speed => {
-                    self.scene.change_scene_light(&-scene_light_speed, &true);
+                    self.scene.change_scene_light(-scene_light_speed, true);
                 }
 
                 PhysicalKey::Code(KeyCode::Space) => {
-                    self.camera.change_pos(&[0.0, speed, 0.0], &true);
-                    self.light.change_pos(&[0.0, speed, 0.0], &true)
+                    self.camera.add_pos(&[0.0, speed, 0.0], true);
+                    self.light.add_pos(&[0.0, speed, 0.0], true)
                 }
                 PhysicalKey::Code(KeyCode::ShiftLeft) => {
-                    self.camera.change_pos(&[0.0, -speed, 0.0], &true);
-                    self.light.change_pos(&[0.0, -speed, 0.0], &true)
+                    self.camera.add_pos(&[0.0, -speed, 0.0], true);
+                    self.light.add_pos(&[0.0, -speed, 0.0], true)
                 }
 
                 PhysicalKey::Code(KeyCode::KeyW) => {
@@ -128,9 +129,9 @@ impl Game {
             }
         }
 
-        self.camera.change_pos(&pos, &true);
-        self.light.change_pos(&pos, &true);
-        self.model.change_rot(&[0.0, 1.0, 0.0], true);
+        self.camera.add_pos(&pos, true);
+        self.light.add_pos(&pos, true);
+        self.model.add_rot(&[0.0, 1.0, 0.0], true);
 
         let camera_pos = self.camera.get_pos();
 

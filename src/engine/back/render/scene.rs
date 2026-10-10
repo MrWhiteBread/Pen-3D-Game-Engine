@@ -56,8 +56,8 @@ impl Scene {
 
 #[allow(dead_code)]
 impl Scene {
-    pub fn new(staging_buffers: StagingBuffers, chunks_size: &f32) -> Self {
-        let mut selective_system  = DynamicChunks::new(&chunks_size);
+    pub fn new(staging_buffers: StagingBuffers, chunks_size: f32) -> Self {
+        let mut selective_system  = DynamicChunks::new(chunks_size);
         
         let default_god_values = [0.0, 0.0, 0.0, 40.0];
         let default_god = selective_system.add_god(&default_god_values);
@@ -90,50 +90,50 @@ impl Scene {
         self.scene.borrow().selective_system.get_usage()
     }
 
-    pub fn set_scene_light(&self, scene_light: &f32, lerp: &bool) {
-        self.scene.borrow_mut().scene_light = *scene_light;
+    pub fn set_scene_light(&self, scene_light: f32, lerp: bool) {
+        self.scene.borrow_mut().scene_light = scene_light;
 
         if !lerp {
-            self.scene.borrow_mut().old_scene_light = *scene_light;
+            self.scene.borrow_mut().old_scene_light = scene_light;
         }
     }
     
-    pub fn object_changed(&self, id: &u32)
+    pub fn object_changed(&self, id: u32)
     {
         self.scene.borrow_mut().selective_system.object_changed(id);
     }
 
     #[allow(unsafe_op_in_unsafe_fn)]
-    pub unsafe fn get_object(&self, id: &u32) -> &Object {
+    pub unsafe fn get_object(&self, id: u32) -> &Object {
         self.scene.borrow().selective_system.get_object(id).as_ref().expect("no object found")
     }
 
     #[allow(unsafe_op_in_unsafe_fn)]
-    pub unsafe fn get_mut_object(&self, id: &u32) -> &mut Object {
+    pub unsafe fn get_mut_object(&self, id: u32) -> &mut Object {
         self.scene.borrow_mut().selective_system.get_mut_object(id).as_mut().expect("no object found")
     }
 
 
-    pub fn light_changed(&self, id: &u32)
+    pub fn light_changed(&self, id: u32)
     {
         self.scene.borrow_mut().selective_system.light_changed(id);
     }
 
     #[allow(unsafe_op_in_unsafe_fn)]
-    pub unsafe fn get_light(&self, id: &u32) -> &LightType {
+    pub unsafe fn get_light(&self, id: u32) -> &LightType {
         self.scene.borrow().selective_system.get_light(id).as_ref().expect("no light found")
     }
 
     #[allow(unsafe_op_in_unsafe_fn)]
-    pub unsafe fn get_mut_light(&self, id: &u32) -> &mut LightType {
+    pub unsafe fn get_mut_light(&self, id: u32) -> &mut LightType {
         self.scene.borrow_mut().selective_system.get_mut_light(id).as_mut().expect("no light found")
     }
 
-    pub fn verify_model(&self, id: &u32) {
+    pub fn verify_model(&self, id: u32) {
         self.scene.borrow_mut().selective_system.verify_model(id);
     }
 
-    pub fn verify_light(&self, id: &u32) {
+    pub fn verify_light(&self, id: u32) {
         self.scene.borrow_mut().selective_system.verify_light(id);
     }
 
@@ -142,14 +142,14 @@ impl Scene {
         self.scene.borrow().scene_light
     }
 
-    pub fn change_scene_light(&self, scene_light: &f32, lerp: &bool) {
-        self.scene.borrow_mut().scene_light += *scene_light;
+    pub fn change_scene_light(&self, scene_light: f32, lerp: bool) {
+        self.scene.borrow_mut().scene_light += scene_light;
         if !lerp {
-            self.scene.borrow_mut().old_scene_light += *scene_light;
+            self.scene.borrow_mut().old_scene_light += scene_light;
         }
     }
     
-    pub fn set_god(&mut self, god: &u32, value: &[f32; 4]) {
+    pub fn set_god(&mut self, god: u32, value: &[f32; 4]) {
         self.scene.borrow_mut().selective_system.set_god(god, value)
     }
     
@@ -165,33 +165,33 @@ impl Scene {
         self.scene.borrow().default_god_values
     }
 
-    pub fn set_default_god(&mut self, id: &u32) {
+    pub fn set_default_god(&mut self, id: u32) {
         let default_god = self.scene.borrow().default_god.clone();
         
-        self.scene.borrow_mut().selective_system.remove_god(&default_god);
-        let values = self.scene.borrow_mut().selective_system.get_god(&id);
+        self.scene.borrow_mut().selective_system.remove_god(default_god);
+        let values = self.scene.borrow_mut().selective_system.get_god(id);
         
         self.scene.borrow_mut().default_god_values = values;
-        self.scene.borrow_mut().default_god = *id;
+        self.scene.borrow_mut().default_god = id;
     }
 
-    pub fn set_default_god_dist(&mut self, dist: &f32) {
+    pub fn set_default_god_dist(&mut self, dist: f32) {
         let default_god = self.scene.borrow().default_god.clone();
-        self.scene.borrow_mut().selective_system.set_god_dist(&default_god, dist);
+        self.scene.borrow_mut().selective_system.set_god_dist(default_god, dist);
         
-        self.scene.borrow_mut().default_god_values[3] = *dist;
+        self.scene.borrow_mut().default_god_values[3] = dist;
     }
 
     pub fn set_default_god_pos(&mut self, pos: &[f32; 3]) {
         let default_god = self.scene.borrow().default_god.clone();
-        self.scene.borrow_mut().selective_system.set_god_pos(&default_god, pos);
+        self.scene.borrow_mut().selective_system.set_god_pos(default_god, pos);
 
         self.scene.borrow_mut().default_god_values[0] = pos[0];
         self.scene.borrow_mut().default_god_values[1] = pos[1];
         self.scene.borrow_mut().default_god_values[2] = pos[2];
     }
     
-    pub fn remove_god(&mut self, id: &u32) -> [f32; 4] {
+    pub fn remove_god(&mut self, id: u32) -> [f32; 4] {
         self.scene.borrow_mut().selective_system.remove_god(id)
     }
 

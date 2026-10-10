@@ -42,7 +42,7 @@ impl DynamicChunks {
         let type_b = &mut lid.type_[*type_i];
         f(type_b);
 
-        lid.ids.remove(&(*type_i as u32));
+        lid.ids.remove(*type_i as u32);
         data.i_type.remove(type_i);
     }
     
@@ -64,7 +64,7 @@ impl DynamicChunks {
         let type_b = &mut lid.type_[*type_i];
         f(type_b);
 
-        lid.ids.remove(&(*type_i as u32));
+        lid.ids.remove(*type_i as u32);
         data.i_type.remove(type_i);
     }
     
@@ -95,13 +95,13 @@ impl DynamicChunks {
             *data.type_i.get_mut(&id).expect("no no") = type_i;
             *data.i_type.get_mut(&type_i).expect("no no") = id;
 
-            lid.ids.remove(&(last as u32));
+            lid.ids.remove(last as u32);
 
         } else {
             let type_b = &mut lid.type_[type_i];
             f(type_b);
 
-            lid.ids.remove(&(type_i as u32));
+            lid.ids.remove(type_i as u32);
             data.i_type.remove(&type_i);
         }
     }
@@ -128,13 +128,13 @@ impl DynamicChunks {
                 *data.type_i.get_mut(&id).expect("no no") = type_i;
                 *data.i_type.get_mut(&type_i).expect("no no") = id;
 
-                lid.ids.remove(&(last as u32));
+                lid.ids.remove(last as u32);
 
             } else {
                 let type_b = &mut lid.type_[type_i];
                 f(type_b);
 
-                lid.ids.remove(&(type_i as u32));
+                lid.ids.remove(type_i as u32);
                 data.i_type.remove(&type_i);
             }
         }
@@ -159,13 +159,13 @@ impl DynamicChunks {
             *data.type_i.get_mut(&id).expect("no no") = type_i;
             *data.i_type.get_mut(&type_i).expect("no no") = id;
 
-            lid.ids.remove(&(last as u32));
+            lid.ids.remove(last as u32);
 
         } else {
             let type_b = &mut lid.type_[type_i];
             f(type_b);
 
-            lid.ids.remove(&(type_i as u32));
+            lid.ids.remove(type_i as u32);
             data.i_type.remove(&type_i);
         }
     }

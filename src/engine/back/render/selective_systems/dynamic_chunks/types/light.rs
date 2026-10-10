@@ -57,30 +57,30 @@ impl DynamicChunks {
         id
     }
 
-    pub fn light_changed(&mut self, id: &u32) {
-        self.data.updater.lights.insert(*id);
+    pub fn light_changed(&mut self, id: u32) {
+        self.data.updater.lights.insert(id);
     }
 
-    pub fn get_light(&self, id: &u32,) -> *const LightType {
-        Self::get_type(id, &self.data.lights, &self.lid.lights)
+    pub fn get_light(&self, id: u32) -> *const LightType {
+        Self::get_type(&id, &self.data.lights, &self.lid.lights)
     }
 
-    pub fn get_mut_light(&mut self, id: &u32,) -> *mut LightType {
-        Self::get_mut_type(id, &mut self.data.lights, &mut self.lid.lights)
+    pub fn get_mut_light(&mut self, id: u32) -> *mut LightType {
+        Self::get_mut_type(&id, &mut self.data.lights, &mut self.lid.lights)
     }
 
-    fn switch_light_chunk(data: &mut DataRegistry<LightType>, chunk: &mut Chunk, chunk_id: &u32, id: &u32, loaded: bool, lid: &mut LidRegistry<LightType>) {
+    fn switch_light_chunk(data: &mut DataRegistry<LightType>, chunk: &mut Chunk, chunk_id: u32, id: u32, loaded: bool, lid: &mut LidRegistry<LightType>) {
         if loaded && !chunk.loaded {
-            Self::swap_remove_data(id, data, lid, &mut |_| {});
+            Self::swap_remove_data(&id, data, lid, &mut |_| {});
         } else if !loaded && chunk.loaded {
-            Self::add_data(id, data, lid);
+            Self::add_data(&id, data, lid);
         }
 
-        data.chunk.insert(*id, *chunk_id);
-        chunk.lights.insert(*id);
+        data.chunk.insert(id, chunk_id);
+        chunk.lights.insert(id);
     }
 
-    pub fn verify_light(&mut self, id: &u32) {
+    pub fn verify_light(&mut self, id: u32) {
         let pos;
 
         unsafe {
@@ -89,7 +89,7 @@ impl DynamicChunks {
 
         let pos = [pos[0], pos[1], pos[2]];
 
-        let chunk_id = self.data.lights.chunk.get(id).expect("chunk not found");
+        let chunk_id = self.data.lights.chunk.get(&id).expect("chunk not found");
 
         let chunk = self.chunks.get_mut(chunk_id).expect("chunk not found");
 
@@ -101,7 +101,7 @@ impl DynamicChunks {
             || chunk.position[2] - self.chunks_size > pos[2] {
 
             let loaded = chunk.loaded;
-            chunk.lights.remove(id);
+            chunk.lights.remove(&id);
 
             let nearest = self.tree.nearest_one::<SquaredEuclidean>(&pos);
 
@@ -110,7 +110,7 @@ impl DynamicChunks {
                     let chunk = self.chunks.get_mut(chunk_id).expect("chunk not found");
 
                     if !chunk.private {
-                        Self::switch_light_chunk(&mut self.data.lights, chunk, chunk_id, id, loaded, &mut self.lid.lights);
+                        Self::switch_light_chunk(&mut self.data.lights, chunk, *chunk_id, id, loaded, &mut self.lid.lights);
                         return;
                     }
                 }
@@ -119,7 +119,7 @@ impl DynamicChunks {
             let chunk_id = self.new_chunk(pos, false);
             let chunk = self.chunks.get_mut(&chunk_id).expect("chunk not found");
 
-            Self::switch_light_chunk(&mut self.data.lights, chunk, &chunk_id, id, loaded, &mut self.lid.lights);
+            Self::switch_light_chunk(&mut self.data.lights, chunk, chunk_id, id, loaded, &mut self.lid.lights);
         }
     }
 }

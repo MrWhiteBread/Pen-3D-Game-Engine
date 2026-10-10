@@ -20,7 +20,7 @@ impl Camera {
         camera.camera_structure.position.to_array()
     }
 
-    pub fn change_pos(&self, position: &[f32; 3], lerp: &bool) {
+    pub fn add_pos(&self, position: &[f32; 3], lerp: bool) {
         let mut camera = self.camera.borrow_mut();
         camera.camera_structure.position[0] += position[0];
         camera.camera_structure.position[1] += position[1];
@@ -33,7 +33,7 @@ impl Camera {
         }
     }
 
-    pub fn set_pos(&self, position: &[f32; 3], lerp: &bool) {
+    pub fn set_pos(&self, position: &[f32; 3], lerp: bool) {
         let mut camera = self.camera.borrow_mut();
         camera.camera_structure.position[0] += position[0];
         camera.camera_structure.position[1] += position[1];
@@ -51,7 +51,7 @@ impl Camera {
         camera.camera_structure.rotation
     }
 
-    pub fn change_rotation(&self, rot: &[f32; 2], lerp: &bool) {
+    pub fn add_rotation(&self, rot: &[f32; 2], lerp: bool) {
         let pitch = rot[0];
         let yaw   = rot[1];
 
@@ -73,7 +73,7 @@ impl Camera {
         }
     }
 
-    pub fn set_rotation(&self, rot: &Quat, lerp: &bool) {
+    pub fn set_rotation(&self, rot: &Quat, lerp: bool) {
         let mut camera = self.camera.borrow_mut();
 
         camera.camera_structure.rotation = *rot;

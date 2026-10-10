@@ -33,7 +33,7 @@ impl Model {
     pub fn get_pos(&self) -> [f32; 3] {
         if let Some(scene) = &self.scene {
             unsafe {
-                let object = scene.get_object(&self.id);
+                let object = scene.get_object(self.id);
                 [object.center[0], object.center[1], object.center[2]]
             }
         } else {
@@ -44,7 +44,7 @@ impl Model {
     pub fn get_raw_rot(&self) -> [f32; 4] {
         if let Some(scene) = &self.scene {
             unsafe {
-                let object = scene.get_object(&self.id);
+                let object = scene.get_object(self.id);
                 object.rot
             }
         } else {
@@ -59,7 +59,7 @@ impl Model {
     pub fn get_size(&self) -> [f32; 3] {
         if let Some(scene) = &self.scene {
             unsafe {
-                let object = scene.get_object(&self.id);
+                let object = scene.get_object(self.id);
                 [object.size[0], object.size[1], object.size[2]]
             }
         } else {
@@ -67,10 +67,10 @@ impl Model {
         }
     }
 
-    pub fn change_pos(&mut self, pos: &[f32; 3], lerp: bool) {
+    pub fn add_pos(&mut self, pos: &[f32; 3], lerp: bool) {
         if let Some(scene) = &mut self.scene {
             unsafe {
-                let object = scene.get_mut_object(&self.id);
+                let object = scene.get_mut_object(self.id);
                 object.center[0] += pos[0];
                 object.center[1] += pos[1];
                 object.center[2] += pos[2];
@@ -80,11 +80,11 @@ impl Model {
                     object.old_center[1] += pos[1];
                     object.old_center[2] += pos[2];
                 } else {
-                    scene.object_changed(&self.id);
+                    scene.object_changed(self.id);
                 }
             }
 
-            scene.verify_model(&self.id);
+            scene.verify_model(self.id);
         } else {
             self.object.center[0] += pos[0];
             self.object.center[1] += pos[1];
@@ -99,7 +99,7 @@ impl Model {
     pub fn set_pos(&mut self, pos: &[f32; 3], lerp: bool) {
         if let Some(scene) = &mut self.scene {
             unsafe {
-                let object = scene.get_mut_object(&self.id);
+                let object = scene.get_mut_object(self.id);
                 object.center[0] = pos[0];
                 object.center[1] = pos[1];
                 object.center[2] = pos[2];
@@ -109,11 +109,11 @@ impl Model {
                     object.old_center[1] = pos[1];
                     object.old_center[2] = pos[2];
                 } else {
-                    scene.object_changed(&self.id);
+                    scene.object_changed(self.id);
                 }
             }
 
-            scene.verify_model(&self.id);
+            scene.verify_model(self.id);
         } else {
             self.object.center[0] = pos[0];
             self.object.center[1] = pos[1];
@@ -128,13 +128,13 @@ impl Model {
     fn rot(&mut self, rot: &[f32; 4], lerp: bool) {
         if let Some(scene) = &mut self.scene {
             unsafe {
-                let object = scene.get_mut_object(&self.id);
+                let object = scene.get_mut_object(self.id);
                 object.rot = *rot;
 
                 if !lerp {
                     object.old_rot = *rot;
                 } else {
-                    scene.object_changed(&self.id);
+                    scene.object_changed(self.id);
                 }
             }
         } else {
@@ -143,7 +143,7 @@ impl Model {
         }
     }
 
-    pub fn change_rot(&mut self, rot: &[f32; 3], lerp: bool) {
+    pub fn add_rot(&mut self, rot: &[f32; 3], lerp: bool) {
         self.angle[0] += rot[0];
         self.angle[1] += rot[1];
         self.angle[2] += rot[2];
@@ -169,10 +169,10 @@ impl Model {
         self.rot(&rot, lerp);
     }
 
-    pub fn change_size(&mut self, size: &[f32; 3], lerp: bool) {
+    pub fn add_size(&mut self, size: &[f32; 3], lerp: bool) {
         if let Some(scene) = &mut self.scene {
             unsafe {
-                let object = scene.get_mut_object(&self.id);
+                let object = scene.get_mut_object(self.id);
                 object.size[0] += size[0];
                 object.size[1] += size[1];
                 object.size[2] += size[2];
@@ -182,7 +182,7 @@ impl Model {
                     object.old_size[1] += size[1];
                     object.old_size[2] += size[2];
                 } else {
-                    scene.object_changed(&self.id);
+                    scene.object_changed(self.id);
                 }
             }
         } else {
@@ -199,7 +199,7 @@ impl Model {
     pub fn set_size(&mut self, size: &[f32; 3], lerp: bool) {
         if let Some(scene) = &mut self.scene {
             unsafe {
-                let object = scene.get_mut_object(&self.id);
+                let object = scene.get_mut_object(self.id);
                 object.size[0] = size[0];
                 object.size[1] = size[1];
                 object.size[2] = size[2];
@@ -209,7 +209,7 @@ impl Model {
                     object.old_size[1] = size[1];
                     object.old_size[2] = size[2];
                 } else {
-                    scene.object_changed(&self.id);
+                    scene.object_changed(self.id);
                 }
             }
         } else {

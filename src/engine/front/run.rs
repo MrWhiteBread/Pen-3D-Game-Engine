@@ -175,7 +175,7 @@ impl UpdateVar {
         let x = -cursor_x * dpi;
 
         let rot: [f32; 2] = [y, x];
-        camera.change_rotation(&rot, &true);
+        camera.add_rotation(&rot, true);
     }
 
     pub fn set_window_x(&mut self, x: i32) {

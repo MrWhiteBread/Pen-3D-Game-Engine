@@ -16,7 +16,7 @@ impl Render {
         }
     }
 
-    pub fn create_scene(&mut self, chunks_size: &f32) -> Scene {
+    pub fn create_scene(&mut self, chunks_size: f32) -> Scene {
         Scene::new(self.staging_buffers_example.clone(), chunks_size)
     }
 

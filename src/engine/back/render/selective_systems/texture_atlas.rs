@@ -91,7 +91,7 @@ impl EmptySpace {
                     [bounds[0] + bounds[2], bounds[1] + bounds[3]],
                 ];
 
-                self_.ids.remove(id);
+                self_.ids.remove(*id);
 
                 if let Some(ids_hash) = (*output).1.get_mut(&bounds[2..]) {
                     ids_hash.insert(*id);
@@ -234,7 +234,7 @@ impl TextureAtlas {
     }
 
     pub fn remove(&mut self, id: Id) {
-        self.ids.remove(&id);
+        self.ids.remove(id);
         let bounds = self.textures.remove(&id).expect("bro this texture doesn t exist, take this error and cry");
 
         self.remove_global(&bounds);
