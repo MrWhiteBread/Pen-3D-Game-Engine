@@ -56,47 +56,50 @@ impl DynamicChunks {
 
     pub fn iter_add_data<T>(chunk_type: &mut HashSet<u32>, data: &mut DataRegistry<T>, lid: &mut LidRegistry<T>) {
         for type_id in chunk_type.iter() {
-            Self::add_data(type_id, data, lid);
+            Self::add_data(*type_id, data, lid);
         }
     }
 
-    pub fn add_data<T>(type_id: &u32, data: &mut DataRegistry<T>, lid: &mut LidRegistry<T>) {
-        let type_ = data.type_.get_mut(type_id).expect("no type found").take().expect("no object found in option");
+    pub fn add_data<T>(type_id: u32, data: &mut DataRegistry<T>, lid: &mut LidRegistry<T>) {
+        let type_ = data.type_.get_mut(&type_id).expect("no type found").take().expect("no object found in option");
         let i = lid.ids.get_id() as usize;
         lid.type_[i] = type_;
 
-        *data.type_i.get_mut(type_id).expect("no no") = i;
-        data.i_type.insert(i, *type_id);
+        *data.type_i.get_mut(&type_id).expect("no no") = i;
+        data.i_type.insert(i, type_id);
     }
 
 
-    pub fn iter_add_data_plus<F, T, const N: usize>(chunk_type: &mut HashSet<u32>, data: &mut DataRegistryPlus<T, N>, lid: &mut LidRegistry<T>, f: &mut F) where F: FnMut(&mut T, &[u32; N]) {
+    pub fn iter_add_data_plus<F, T>(chunk_type: &mut HashSet<u32>, data: &mut DataRegistryPlus<T>, lid: &mut LidRegistry<T>, f: &mut F)
+    where F: FnMut(&mut T, &Vec<Vec<u32>>) {
         for type_id in chunk_type.iter() {
-            Self::add_data_plus(type_id, data, lid, f);
+            Self::add_data_plus(*type_id, data, lid, f);
         }
     }
 
-    pub fn add_data_plus<F, T, const N: usize>(type_id: &u32, data: &mut DataRegistryPlus<T, N>, lid: &mut LidRegistry<T>, f: &mut F) where F: FnMut(&mut T, &[u32; N]) {
-        let data_ = data.type_.get_mut(type_id).expect("no type found");
-        let mut type_ = data_.0.take().expect("no object found in option");
+    pub fn add_data_plus<F, T>(type_id: u32, data: &mut DataRegistryPlus<T>, lid: &mut LidRegistry<T>, f: &mut F) 
+    where F: FnMut(&mut T, &Vec<Vec<u32>>) {
+        let data_ = data.type_.get_mut(&type_id).expect("no type found");
+        let mut type_ = data_.take().expect("no object found in option");
+        let payload = data.payload.get(&type_id).expect("no payload found");
         let i = lid.ids.get_id() as usize;
 
-        f(&mut type_, &data_.1);
+        f(&mut type_, payload);
         lid.type_[i] = type_;
 
-        *data.type_i.get_mut(type_id).expect("no no") = i;
-        data.i_type.insert(i, *type_id);
+        *data.type_i.get_mut(&type_id).expect("no no") = i;
+        data.i_type.insert(i, type_id);
     }
 
-
-    pub fn iter_add_data_array<T>(chunk_type: &mut HashSet<u32>, data: &mut DataRegistryArray<T>, lid: &mut LidRegistryArray<T>) {
-        for type_id in chunk_type.iter() {
-            Self::add_data_array(type_id, data, lid);
+    pub fn add_data_array<T>(type_id: u32, data: &mut DataRegistryArray<T>, lid: &mut LidRegistryArray<T>) {
+        let act_count = data.activators.get_mut(&type_id).expect("activator not found");
+        *act_count += 1;
+        
+        if *act_count != 1 {
+            return;
         }
-    }
-
-    pub fn add_data_array<T>(type_id: &u32, data: &mut DataRegistryArray<T>, lid: &mut LidRegistryArray<T>) {
-        let type_vec = data.type_.get_mut(type_id).expect("no type found");
+        
+        let type_vec = data.type_.get_mut(&type_id).expect("no type found");
 
         let ids = lid.ids.get_id(type_vec.len() as u32);
         let mut start = ids.start;
@@ -108,6 +111,6 @@ impl DynamicChunks {
             lid.type_[i] = type_;
         }
 
-        *data.type_i.get_mut(type_id).expect("no no") = [ids.start as usize, ids.end as usize];
+        *data.type_i.get_mut(&type_id).expect("no no") = [ids.start as usize, ids.end as usize];
     }
 }

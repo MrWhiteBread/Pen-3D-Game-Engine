@@ -1,8 +1,9 @@
 use crate::engine::back::render::selective_systems::dynamic_chunks::DynamicChunks;
 
-mod model;
+mod object;
 mod light;
 mod global_fn;
+mod mesh;
 
 #[allow(dead_code)]
 impl DynamicChunks {

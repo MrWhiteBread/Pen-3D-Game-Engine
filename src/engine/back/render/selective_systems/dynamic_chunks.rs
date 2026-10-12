@@ -101,31 +101,32 @@ impl DynamicChunks {
                 &mut lid.lights,
                 &mut |_| {}
             );
-
-
+            
             Self::iter_swap_remove_data_plus(
                 &mut chunk.objects,
                 &mut data.objects,
                 &mut lid.objects,
-                &mut |object| {
+                &mut |object, payload| {
                     object.status = 0;
+                    
+                    if let Some(vertices_id) = payload[0].get(0) {
+                        Self::remove_data_array(
+                            *vertices_id,
+                            &mut data.vertices,
+                            &mut lid.vertices,
+                            &mut |_| {}
+                        );
+                    }
+
+                    if let Some(indices_id) = payload[1].get(0) {
+                        Self::remove_data_array(
+                            *indices_id,
+                            &mut data.indices,
+                            &mut lid.indices,
+                            &mut |_| {}
+                        );
+                    }
                 }
-            );
-
-
-            Self::iter_remove_data_array(
-                &mut chunk.vertices,
-                &mut data.vertices,
-                &mut lid.vertices,
-                &mut |_| {}
-            );
-
-
-            Self::iter_remove_data_array(
-                &mut chunk.indices,
-                &mut data.indices,
-                &mut lid.indices,
-                &mut |_| {}
             );
         });
 
@@ -136,34 +137,31 @@ impl DynamicChunks {
                 &mut lid.lights,
             );
 
-
-            Self::iter_add_data_array(
-                &mut chunk.vertices,
-                &mut data.vertices,
-                &mut lid.vertices,
-            );
-
-
-            Self::iter_add_data_array(
-                &mut chunk.indices,
-                &mut data.indices,
-                &mut lid.indices,
-            );
-
-
             Self::iter_add_data_plus(
                 &mut chunk.objects,
                 &mut data.objects,
                 &mut lid.objects,
-                &mut |object, ids| {
-                    let ver = data.vertices.type_i.get(&ids[0]);
-                    let ind = data.indices.type_i.get(&ids[1]);
-
-                    if let Some(ver) = ver {
+                &mut |object, payload| {
+                    if let Some(vertices_id) = payload[0].get(0) {
+                        Self::add_data_array(
+                            *vertices_id,
+                            &mut data.vertices,
+                            &mut lid.vertices,
+                        );
+                        
+                        let ver = data.vertices.type_i.get(&vertices_id).expect("no vertex id");
                         object.base_vertex = ver[0] as i32;
                     }
 
-                    if let Some(ind) = ind {
+                    if let Some(indices_id) = payload[1].get(0) {
+                        Self::add_data_array(
+                            *indices_id,
+                            &mut data.indices,
+                            &mut lid.indices,
+                        );
+                        
+                        let ind = data.indices.type_i.get(&indices_id).expect("no index id");
+
                         object.first_index = ind[0] as u32;
                         object.index_count = (ind[1] - ind[0]) as u32;
                     }

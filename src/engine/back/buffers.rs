@@ -69,6 +69,7 @@ impl Buffers {
 
 
         let max_vertices = safe_max_bytes / size_of::<Vertex>();
+        println!("max_vertices: {}", max_vertices);
 
         let vertices_buffer = device.create_buffer(&BufferDescriptor {
             label: Some("Vertex buffer"),
@@ -143,6 +144,7 @@ impl Buffers {
 
 
         let max_objects = safe_max_bytes / size_of::<Object>();
+        println!("max_objects: {}", max_objects);
 
         let object_buffer = device.create_buffer(&BufferDescriptor {
             label: Some("Object buffer"),

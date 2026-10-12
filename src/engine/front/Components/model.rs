@@ -1,33 +1,47 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use glam::{EulerRot, Quat};
 use crate::engine::back::render::scene::Scene;
 use crate::engine::back::types::object::Object;
 use crate::engine::front::components::mesh::Mesh;
 
+type Id = u32;
+
 pub struct Model {
     scene: Option<Scene>,
+    loaded: bool,
 
     object: Object,
-    mesh: Option<Mesh>,
+    mesh: *mut Mesh,
     angle: [f32; 3],
 
-    id: u32,
+    mesh_id: Id,
+    id: Id,
 }
 
 #[allow(dead_code)]
 impl Model {
-    pub fn new(mut object: Object, mesh: Mesh) -> Self {
-        object.set_mesh(&mesh);
+    pub fn new(mut object: Object, mesh: &mut Mesh) -> Self {
+        object.set_mesh(mesh);
+
         let angle = Quat::from_array(object.rot).to_euler(EulerRot::XYZ);
         let angle = [angle.0.to_degrees(), angle.1.to_degrees(), angle.2.to_degrees()];
         
-        Self {
-            object,
-            mesh: Some(mesh),
+        let mut _self = Self {
             scene: None,
+            loaded: false,
+            
+            object,
+            mesh,
             angle,
             
+            mesh_id: 0,
             id: 0,
-        }
+        };
+
+        _self.mesh_id = mesh._add_unloaded_model(&mut _self);
+
+        _self
     }
 
     pub fn get_pos(&self) -> [f32; 3] {
@@ -222,11 +236,48 @@ impl Model {
             self.object.old_size[2] = size[2];
         }
     }
-
+    
+    pub fn get_id(&self) -> Id {
+        self.id
+    }
+    
+    pub fn is_loaded(&self) -> bool {
+        self.loaded
+    }
+    
     pub fn load(&mut self, scene: &Scene) {
-        if self.scene.is_none() && let Some(mesh) = self.mesh.take() {
-            self.id = scene.add_model(self.object, mesh);
+        if self.scene.is_none() {
+            self.id = scene.add_object(self.object);
+            self.loaded = true;
+            
+            unsafe {
+                (*self.mesh)._remove_unloaded_model(self.mesh_id);
+                self.mesh_id = (*self.mesh)._add_loaded_model(self);
+                
+                if (*self.mesh).is_loaded() {
+                    scene.set_object_mesh(self.id, (*self.mesh).get_ids())
+                }
+            }
+            
             self.scene = Some(scene.clone());
         }
+    }
+    
+    pub fn unload(&mut self) {
+        //TODO: 
+    }
+}
+
+impl Drop for Model {
+    fn drop(&mut self) {
+        unsafe {
+            if self.is_loaded() {
+                (*self.mesh)._remove_loaded_model(self.mesh_id);
+            } else {
+                (*self.mesh)._remove_unloaded_model(self.mesh_id);
+            }
+        }   
+        
+        self.unload();
     }
 }

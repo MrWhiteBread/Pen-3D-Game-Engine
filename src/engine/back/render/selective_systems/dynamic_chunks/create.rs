@@ -13,8 +13,6 @@ impl DynamicChunks {
 
             lights: HashSet::new(),
             objects: HashSet::new(),
-            vertices: HashSet::new(),
-            indices: HashSet::new(),
             
             textures: HashSet::new(),
         };

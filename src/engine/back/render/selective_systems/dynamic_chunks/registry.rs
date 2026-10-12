@@ -4,10 +4,16 @@ use wgpu::naga::BuiltIn::Position;
 use crate::engine::back::render::selective_systems::id::{Id32, Id32Range};
 use crate::engine::back::render::selective_systems::texture_atlas::TextureAtlas;
 
+type Id = u32;
+type ChunkId = u32;
+type ActivatorsCount = u32;
+type Index = usize;
+
 pub struct DataRegistryArray<T> {
-    pub type_: HashMap<u32, Vec<T>>,
-    pub chunk: HashMap<u32, u32>,
-    pub type_i: HashMap<u32, [usize; 2]>,
+    pub type_: HashMap<Id, Vec<T>>,
+    pub activators: HashMap<Id, ActivatorsCount>,
+    pub type_i: HashMap<Id, [usize; 2]>,
+    
     pub ids: Id32,
 }
 
@@ -15,7 +21,7 @@ impl<T> DataRegistryArray<T> {
     pub fn new() -> Self {
         Self {
             type_: HashMap::new(),
-            chunk: HashMap::new(),
+            activators: HashMap::new(),
             type_i: HashMap::new(),
             ids: Id32::new(),
         }
@@ -23,10 +29,11 @@ impl<T> DataRegistryArray<T> {
 }
 
 pub struct DataRegistry<T> {
-    pub type_: HashMap<u32, Option<T>>,
-    pub chunk: HashMap<u32, u32>,
-    pub type_i: HashMap<u32, usize>,
-    pub i_type: HashMap<usize, u32>,
+    pub type_: HashMap<Id, Option<T>>,
+    pub chunk: HashMap<Id, ChunkId>,
+    pub type_i: HashMap<Id, Index>,
+    pub i_type: HashMap<Index, Id>,
+    
     pub ids: Id32,
 }
 
@@ -42,21 +49,25 @@ impl<T> DataRegistry<T> {
     }
 }
 
-pub struct DataRegistryPlus<T, const N: usize> {
-    pub type_: HashMap<u32, (Option<T>, [u32; N])>,
-    pub chunk: HashMap<u32, u32>,
-    pub type_i: HashMap<u32, usize>,
-    pub i_type: HashMap<usize, u32>,
+pub struct DataRegistryPlus<T> {
+    pub type_: HashMap<Id, Option<T>>,
+    pub chunk: HashMap<Id, ChunkId>,
+    pub type_i: HashMap<Id, Index>,
+    pub i_type: HashMap<Index, Id>,
+    pub payload: HashMap<Id, Vec<Vec<u32>>>,
+
     pub ids: Id32,
 }
 
-impl<T, const N: usize> DataRegistryPlus<T, N> {
+impl<T> DataRegistryPlus<T> {
     pub fn new() -> Self {
         Self {
             type_: HashMap::new(),
             chunk: HashMap::new(),
             type_i: HashMap::new(),
             i_type: HashMap::new(),
+            payload: HashMap::new(),
+            
             ids: Id32::new(),
         }
     }

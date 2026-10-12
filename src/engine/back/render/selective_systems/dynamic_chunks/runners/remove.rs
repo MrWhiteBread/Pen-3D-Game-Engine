@@ -28,14 +28,14 @@ impl DynamicChunks {
     pub fn iter_remove_data<F, T: Clone>(chunk_type: &mut HashSet<u32>, data: &mut DataRegistry<T>, lid: &mut LidRegistry<T>, f: &mut F)
     where F: FnMut(&mut T) {
         for type_id in chunk_type.iter() {
-            Self::remove_data(type_id, data, lid, f);
+            Self::remove_data(*type_id, data, lid, f);
         }
     }
     
-    pub fn remove_data<F, T: Clone>(type_id: &u32, data: &mut DataRegistry<T>, lid: &mut LidRegistry<T>, f: &mut F)
+    pub fn remove_data<F, T: Clone>(type_id: u32, data: &mut DataRegistry<T>, lid: &mut LidRegistry<T>, f: &mut F)
     where F: FnMut(&mut T) {
-        let type_ = data.type_.get_mut(type_id).expect("type not found");
-        let type_i = data.type_i.get(type_id).expect("type id not found");
+        let type_ = data.type_.get_mut(&type_id).expect("type not found");
+        let type_i = data.type_i.get(&type_id).expect("type id not found");
 
         *type_ = Some(lid.type_[*type_i].clone());
 
@@ -47,22 +47,23 @@ impl DynamicChunks {
     }
     
 
-    pub fn iter_remove_data_plus<F, T: Clone, const N: usize>(chunk_type: &mut HashSet<u32>, data: &mut DataRegistryPlus<T, N>, lid: &mut LidRegistry<T>, f: &mut F)
-    where F: FnMut(&mut T) {
+    pub fn iter_remove_data_plus<F, T: Clone>(chunk_type: &mut HashSet<u32>, data: &mut DataRegistryPlus<T>, lid: &mut LidRegistry<T>, f: &mut F)
+    where F: FnMut(&mut T, &Vec<Vec<u32>>) {
         for type_id in chunk_type.iter() {
-            Self::remove_data_plus(type_id, data, lid, f);
+            Self::remove_data_plus(*type_id, data, lid, f);
         }
     }
 
-    pub fn remove_data_plus<F, T: Clone, const N: usize>(type_id: &u32, data: &mut DataRegistryPlus<T, N>, lid: &mut LidRegistry<T>, f: &mut F)
-    where F: FnMut(&mut T) {
-        let type_ = data.type_.get_mut(type_id).expect("type not found");
-        let type_i = data.type_i.get(type_id).expect("type id not found");
+    pub fn remove_data_plus<F, T: Clone>(type_id: u32, data: &mut DataRegistryPlus<T>, lid: &mut LidRegistry<T>, f: &mut F)
+    where F: FnMut(&mut T, &Vec<Vec<u32>>) {
+        let type_ = data.type_.get_mut(&type_id).expect("type not found");
+        let type_i = data.type_i.get(&type_id).expect("type id not found");
+        let payload = data.payload.get(&type_id).expect("payload not found");
 
-        type_.0 = Some(lid.type_[*type_i].clone());
+        *type_ = Some(lid.type_[*type_i].clone());
 
         let type_b = &mut lid.type_[*type_i];
-        f(type_b);
+        f(type_b, payload);
 
         lid.ids.remove(*type_i as u32);
         data.i_type.remove(type_i);
@@ -72,14 +73,14 @@ impl DynamicChunks {
     pub fn iter_swap_remove_data<F, T: Clone>(chunk_type: &mut HashSet<u32>, data: &mut DataRegistry<T>, lid: &mut LidRegistry<T>, f: &mut F)
     where F: FnMut(&mut T) {
         for type_id in chunk_type.iter() {
-            Self::swap_remove_data(type_id, data, lid, f);
+            Self::swap_remove_data(*type_id, data, lid, f);
         }
     }
 
-    pub fn swap_remove_data<F, T: Clone>(type_id: &u32, data: &mut DataRegistry<T>, lid: &mut LidRegistry<T>, f: &mut F)
+    pub fn swap_remove_data<F, T: Clone>(type_id: u32, data: &mut DataRegistry<T>, lid: &mut LidRegistry<T>, f: &mut F)
     where F: FnMut(&mut T) {
-        let type_ = data.type_.get_mut(type_id).expect("type not found");
-        let type_i = data.type_i.get(type_id).expect("type id not found").clone();
+        let type_ = data.type_.get_mut(&type_id).expect("type not found");
+        let type_i = data.type_i.get(&type_id).expect("type id not found").clone();
 
         *type_ = Some(lid.type_[type_i].clone());
 
@@ -108,52 +109,28 @@ impl DynamicChunks {
     
     
 
-    pub fn iter_swap_remove_data_plus<F, T: Clone, const N: usize>(chunk_type: &mut HashSet<u32>, data: &mut DataRegistryPlus<T, N>, lid: &mut LidRegistry<T>, f: &mut F)
-    where F: FnMut(&mut T) {
+    pub fn iter_swap_remove_data_plus<F, T: Clone>(chunk_type: &mut HashSet<u32>, data: &mut DataRegistryPlus<T>, lid: &mut LidRegistry<T>, f: &mut F)
+    where F: FnMut(&mut T, &Vec<Vec<u32>>) {
         for type_id in chunk_type.iter() {
-            let type_ = &mut data.type_.get_mut(type_id).expect("type not found").0;
-            let type_i = data.type_i.get(type_id).expect("type id not found").clone();
-
-            *type_ = Some(lid.type_[type_i].clone());
-
-            let last = lid.ids.last() as usize;
-
-            if last != type_i {
-                lid.type_[type_i] = lid.type_[last].clone();
-
-                let type_b = &mut lid.type_[last];
-                f(type_b);
-
-                let id = data.i_type.remove(&last).expect("last id not found");
-                *data.type_i.get_mut(&id).expect("no no") = type_i;
-                *data.i_type.get_mut(&type_i).expect("no no") = id;
-
-                lid.ids.remove(last as u32);
-
-            } else {
-                let type_b = &mut lid.type_[type_i];
-                f(type_b);
-
-                lid.ids.remove(type_i as u32);
-                data.i_type.remove(&type_i);
-            }
+            Self::swap_remove_data_plus(*type_id, data, lid, f);
         }
     }
 
-    pub fn swap_remove_data_plus<F, T: Clone, const N: usize>(type_id: &u32, data: &mut DataRegistryPlus<T, N>, lid: &mut LidRegistry<T>, f: &mut F)
-    where F: FnMut(&mut T) {
-        let type_ = &mut data.type_.get_mut(type_id).expect("type not found").0;
-        let type_i = data.type_i.get(type_id).expect("type id not found").clone();
+    pub fn swap_remove_data_plus<F, T: Clone>(type_id: u32, data: &mut DataRegistryPlus<T>, lid: &mut LidRegistry<T>, f: &mut F)
+    where F: FnMut(&mut T, &Vec<Vec<u32>>) {
+        let type_ = data.type_.get_mut(&type_id).expect("type not found");
+        let type_i = data.type_i.get(&type_id).expect("type id not found").clone();
+        let payload = data.payload.get(&type_id).expect("no payload not found");
 
         *type_ = Some(lid.type_[type_i].clone());
-
+        
         let last = lid.ids.last() as usize;
 
         if last != type_i {
             lid.type_[type_i] = lid.type_[last].clone();
 
             let type_b = &mut lid.type_[last];
-            f(type_b);
+            f(type_b, payload);
 
             let id = data.i_type.remove(&last).expect("last id not found");
             *data.type_i.get_mut(&id).expect("no no") = type_i;
@@ -163,24 +140,24 @@ impl DynamicChunks {
 
         } else {
             let type_b = &mut lid.type_[type_i];
-            f(type_b);
+            f(type_b, payload);
 
             lid.ids.remove(type_i as u32);
             data.i_type.remove(&type_i);
         }
     }
 
-    pub fn iter_remove_data_array<F, T: Clone>(chunk_type: &mut HashSet<u32>, data: &mut DataRegistryArray<T>,  lid: &mut LidRegistryArray<T>, f: &mut F)
+    pub fn remove_data_array<F, T: Clone>(type_id: u32, data: &mut DataRegistryArray<T>,  lid: &mut LidRegistryArray<T>, f: &mut F)
     where F: FnMut(&mut T) {
-        for type_id in chunk_type.iter() {
-            Self::remove_data_array(type_id, data, lid, f);
+        let act_count = data.activators.get_mut(&type_id).expect("activator not found");
+        *act_count -= 1;
+        
+        if *act_count != 0 {
+            return;
         }
-    }
-
-    pub fn remove_data_array<F, T: Clone>(type_id: &u32, data: &mut DataRegistryArray<T>,  lid: &mut LidRegistryArray<T>, f: &mut F)
-    where F: FnMut(&mut T) {
-        let type_ = data.type_.get_mut(type_id).expect("type not found");
-        let type_i = data.type_i.get(type_id).expect("type id not found");
+        
+        let type_ = data.type_.get_mut(&type_id).expect("type not found");
+        let type_i = data.type_i.get(&type_id).expect("type id not found");
 
         *type_ = Vec::new();
 

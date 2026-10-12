@@ -65,6 +65,6 @@ impl Object {
     }
     
     pub fn set_mesh(&mut self, mesh: &Mesh) {
-        self.radius = mesh.radius;
+        self.radius = mesh.get_radius();
     }
 }

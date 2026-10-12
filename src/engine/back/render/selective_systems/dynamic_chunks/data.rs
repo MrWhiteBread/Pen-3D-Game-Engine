@@ -14,8 +14,6 @@ pub struct Chunk {
 
     pub lights: HashSet<u32>,
     pub objects: HashSet<u32>,
-    pub vertices: HashSet<u32>,
-    pub indices: HashSet<u32>,
 
     pub textures: HashSet<u32>,
 }
@@ -48,7 +46,7 @@ impl LID {
 
 pub struct Data {
     pub lights: DataRegistry<LightType>,
-    pub objects: DataRegistryPlus<Object, 2>,
+    pub objects: DataRegistryPlus<Object>,
     pub vertices: DataRegistryArray<Vertex>,
     pub indices: DataRegistryArray<u32>,
 

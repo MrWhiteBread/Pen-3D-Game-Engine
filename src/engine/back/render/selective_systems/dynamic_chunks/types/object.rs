@@ -8,7 +8,7 @@ use crate::engine::front::components::mesh::Mesh;
 
 #[allow(dead_code)]
 impl DynamicChunks {
-    pub fn add_object(&mut self, object: Object, mesh: Mesh) -> u32 {
+    pub fn add_object(&mut self, object: Object) -> u32 {
         let position = [object.center[0], object.center[1], object.center[2]];
         let nearest = self.tree.nearest_one::<SquaredEuclidean>(&position);
 
@@ -18,73 +18,37 @@ impl DynamicChunks {
 
                 if !chunk.private {
                     if chunk.loaded {
-                        return self.add_loaded(*chunk_id, object, mesh);
+                        return self.add_loaded(*chunk_id, object);
                     }
 
-                    return self.add(*chunk_id, object, mesh);
+                    return self.add(*chunk_id, object);
                 }
             }
         }
 
         let chunk_id = self.new_chunk(position, false);
-        self.add(chunk_id, object, mesh)
+        self.add(chunk_id, object)
     }
 
-    fn add(&mut self, chunk_id: u32, object: Object, mesh: Mesh) -> u32 {
+    fn add(&mut self, chunk_id: u32, object: Object) -> u32 {
         let chunk = self.chunks.get_mut(&chunk_id).expect("chunk not found");
-        let (vertices, indices) = mesh.unload();
-
-        fn array_data<T>(data: &mut DataRegistryArray<T>, array: Vec<T>, chunk: &mut HashSet<u32>, chunk_id: &u32) -> u32 {
-            let id = data.ids.get_id();
-
-            chunk.insert(id);
-            data.type_.insert(id, array);
-            data.chunk.insert(id, *chunk_id);
-            data.type_i.insert(id, [0, 0]);
-
-            id
-        }
-
-        let v_id = array_data(&mut self.data.vertices, vertices, &mut chunk.vertices, &chunk_id);
-        let i_id = array_data(&mut self.data.indices, indices, &mut chunk.indices, &chunk_id);
 
         let id = self.data.objects.ids.get_id();
 
         chunk.objects.insert(id);
-        self.data.objects.type_.insert(id, (Some(object), [v_id, i_id]));
+        self.data.objects.type_.insert(id, Some(object));
         self.data.objects.chunk.insert(id, chunk_id);
         self.data.objects.type_i.insert(id, 0);
+        self.data.objects.payload.insert(id, Vec::from([Vec::new(), Vec::new()]));
 
         id
     }
 
-    fn add_loaded(&mut self, chunk_id: u32, object: Object, mesh: Mesh) -> u32 {
+    fn add_loaded(&mut self, chunk_id: u32, object: Object) -> u32 {
         let chunk = self.chunks.get_mut(&chunk_id).expect("chunk not found");
-        let (vertices, indices) = mesh.unload();
-
-        fn array_data<T>(data: &mut DataRegistryArray<T>, lid: &mut LidRegistryArray<T>, mut array: Vec<T>, chunk: &mut HashSet<u32>, chunk_id: &u32) -> u32 {
-            let id = data.ids.get_id();
-            let index = lid.ids.get_id(array.len() as u32);
-            let mut i = index.start as usize;
-
-            chunk.insert(id);
-            data.type_i.insert(id, [index.start as usize, index.end as usize]);
-            data.chunk.insert(id, *chunk_id);
-            data.type_.insert(id, Vec::new());
-
-            for t in array.drain(..) {
-                lid.type_[i] = t;
-                i += 1;
-            }
-
-            id
-        }
-
-        let v_id = array_data(&mut self.data.vertices, &mut self.lid.vertices, vertices, &mut chunk.vertices, &chunk_id);
-        let i_id = array_data(&mut self.data.indices, &mut self.lid.indices, indices, &mut chunk.indices, &chunk_id);
 
         let id = self.data.objects.ids.get_id();
-        self.data.objects.type_.insert(id, (None, [v_id, i_id]));
+        self.data.objects.type_.insert(id, None);
 
         let index = self.lid.objects.ids.get_id() as usize;
         self.lid.objects.type_[index] = object;
@@ -92,62 +56,115 @@ impl DynamicChunks {
         self.data.objects.type_i.insert(id, index);
         self.data.objects.chunk.insert(id, chunk_id);
         self.data.objects.i_type.insert(index, id);
+        self.data.objects.payload.insert(id, Vec::from([Vec::new(), Vec::new()]));
         chunk.objects.insert(id);
 
         id
+    }
+
+    pub fn set_object_mesh(&mut self, id: u32, mesh_ids: &[u32; 2]) {
+        let vec = self.data.objects.payload.get_mut(&id).expect("object not found");
+        vec[0] = Vec::from([mesh_ids[0]]);
+        vec[1] = Vec::from([mesh_ids[1]]);
+        
+        let chunk_id = self.data.objects.chunk.get(&id).expect("chunk id not found");
+        let chunk = self.chunks.get(chunk_id).expect("chunk not found");
+
+        if chunk.loaded {
+            Self::add_data_array(
+                mesh_ids[0],
+                &mut self.data.vertices,
+                &mut self.lid.vertices,
+            );
+
+            Self::add_data_array(
+                mesh_ids[1],
+                &mut self.data.indices,
+                &mut self.lid.indices,
+            );
+
+            let index = self.data.objects.type_i.get(&id).expect("type not found");
+            let object = &mut self.lid.objects.type_[*index];
+
+            let ver = self.data.vertices.type_i.get(&mesh_ids[0]).expect("no vertex id");
+            object.base_vertex = ver[0] as i32;
+
+            let ind = self.data.indices.type_i.get(&mesh_ids[1]).expect("no index id");
+
+            object.first_index = ind[0] as u32;
+            object.index_count = (ind[1] - ind[0]) as u32;
+        }
     }
 
     pub fn object_changed(&mut self, id: u32) {
         self.data.updater.objects.insert(id);
     }
 
-    pub fn get_object(&self, id: u32,) -> *const Object {
-        Self::get_type_plus(&id, &self.data.objects, &self.lid.objects)
+    pub fn get_object(&self, id: u32) -> *const Object {
+        Self::get_type_plus(id, &self.data.objects, &self.lid.objects)
     }
 
-    pub fn get_mut_object(&mut self, id: u32,) -> *mut Object {
-        Self::get_mut_type_plus(&id, &mut self.data.objects, &mut self.lid.objects)
+    pub fn get_mut_object(&mut self, id: u32) -> *mut Object {
+        Self::get_mut_type_plus(id, &mut self.data.objects, &mut self.lid.objects)
     }
 
-    fn switch_model_chunk(data: &mut Data, chunk: &mut Chunk, chunk_id: u32, ids: &[u32; 3], loaded: bool, lid: &mut LID) {
-        let id = ids[0];
-        let v_id = ids[1];
-        let i_id = ids[2];
-
+    fn switch_object_chunk(data: &mut Data, chunk: &mut Chunk, chunk_id: u32, id: u32, loaded: bool, lid: &mut LID) {
         if loaded && !chunk.loaded {
-            Self::swap_remove_data_plus(&id, &mut data.objects, &mut lid.objects, &mut |object| {
+            Self::swap_remove_data_plus(id, &mut data.objects, &mut lid.objects, &mut |object, payload| {
                 object.status = 0;
-            });
-            Self::remove_data_array(&v_id, &mut data.vertices, &mut lid.vertices, &mut |_| {});
-            Self::remove_data_array(&i_id, &mut data.indices, &mut lid.indices, &mut |_| {});
 
-        } else if !loaded && chunk.loaded {
-            Self::add_data_plus(&id, &mut data.objects, &mut lid.objects, &mut |object, ids| {
-                let ver = data.vertices.type_i.get(&ids[0]);
-                let ind = data.indices.type_i.get(&ids[1]);
-
-                if let Some(ver) = ver {
-                    object.base_vertex = ver[0] as i32;
+                if let Some(vertices_id) = payload[0].get(0) {
+                    Self::remove_data_array(
+                        *vertices_id,
+                        &mut data.vertices,
+                        &mut lid.vertices,
+                        &mut |_| {}
+                    );
                 }
 
-                if let Some(ind) = ind {
+                if let Some(indices_id) = payload[1].get(0) {
+                    Self::remove_data_array(
+                        *indices_id,
+                        &mut data.indices,
+                        &mut lid.indices,
+                        &mut |_| {}
+                    );
+                }
+            });
+        } else if !loaded && chunk.loaded {
+            Self::add_data_plus(id, &mut data.objects, &mut lid.objects, &mut |object, payload| {
+                if let Some(vertices_id) = payload[0].get(0) {
+                    let ver = data.vertices.type_i.get(&vertices_id).expect("no vertex id");
+                    object.base_vertex = ver[0] as i32;
+
+                    Self::add_data_array(
+                        *vertices_id,
+                        &mut data.vertices,
+                        &mut lid.vertices,
+                    );
+                }
+
+                if let Some(indices_id) = payload[1].get(0) {
+                    let ind = data.indices.type_i.get(&indices_id).expect("no index id");
+
                     object.first_index = ind[0] as u32;
                     object.index_count = (ind[1] - ind[0]) as u32;
+
+                    Self::add_data_array(
+                        *indices_id,
+                        &mut data.indices,
+                        &mut lid.indices,
+                    );
                 }
             });
-            Self::add_data_array(&v_id, &mut data.vertices, &mut lid.vertices);
-            Self::add_data_array(&i_id, &mut data.indices, &mut lid.indices);
         }
 
         data.objects.chunk.insert(id, chunk_id);
         chunk.objects.insert(id);
-        chunk.vertices.insert(v_id);
-        chunk.indices.insert(i_id);
     }
 
     pub fn verify_model(&mut self, id: u32) {
         let pos;
-        let (_, [v_id, i_id]) = self.data.objects.type_.get(&id).expect("no object found");
 
         unsafe {
             pos = (*self.get_object(id)).center;
@@ -168,9 +185,6 @@ impl DynamicChunks {
 
             let loaded = chunk.loaded;
             chunk.objects.remove(&id);
-            chunk.vertices.remove(v_id);
-            chunk.indices.remove(i_id);
-            let ids = [id, *v_id, *i_id];
 
             let nearest = self.tree.nearest_one::<SquaredEuclidean>(&pos);
 
@@ -179,7 +193,7 @@ impl DynamicChunks {
                     let chunk = self.chunks.get_mut(chunk_id).expect("chunk not found");
 
                     if !chunk.private {
-                        Self::switch_model_chunk(&mut self.data, chunk, *chunk_id, &ids, loaded, &mut self.lid);
+                        Self::switch_object_chunk(&mut self.data, chunk, *chunk_id, id, loaded, &mut self.lid);
                         return;
                     }
                 }
@@ -188,7 +202,7 @@ impl DynamicChunks {
             let chunk_id = self.new_chunk(pos, false);
             let chunk = self.chunks.get_mut(&chunk_id).expect("chunk not found");
 
-            Self::switch_model_chunk(&mut self.data, chunk, chunk_id, &ids, loaded, &mut self.lid);
+            Self::switch_object_chunk(&mut self.data, chunk, chunk_id, id, loaded, &mut self.lid);
         }
     }
 }

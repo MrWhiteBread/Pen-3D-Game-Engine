@@ -62,18 +62,18 @@ impl DynamicChunks {
     }
 
     pub fn get_light(&self, id: u32) -> *const LightType {
-        Self::get_type(&id, &self.data.lights, &self.lid.lights)
+        Self::get_type(id, &self.data.lights, &self.lid.lights)
     }
 
     pub fn get_mut_light(&mut self, id: u32) -> *mut LightType {
-        Self::get_mut_type(&id, &mut self.data.lights, &mut self.lid.lights)
+        Self::get_mut_type(id, &mut self.data.lights, &mut self.lid.lights)
     }
 
     fn switch_light_chunk(data: &mut DataRegistry<LightType>, chunk: &mut Chunk, chunk_id: u32, id: u32, loaded: bool, lid: &mut LidRegistry<LightType>) {
         if loaded && !chunk.loaded {
-            Self::swap_remove_data(&id, data, lid, &mut |_| {});
+            Self::swap_remove_data(id, data, lid, &mut |_| {});
         } else if !loaded && chunk.loaded {
-            Self::add_data(&id, data, lid);
+            Self::add_data(id, data, lid);
         }
 
         data.chunk.insert(id, chunk_id);

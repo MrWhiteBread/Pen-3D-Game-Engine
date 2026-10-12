@@ -59,7 +59,7 @@ impl Scene {
     pub fn new(staging_buffers: StagingBuffers, chunks_size: f32) -> Self {
         let mut selective_system  = DynamicChunks::new(chunks_size);
         
-        let default_god_values = [0.0, 0.0, 0.0, 40.0];
+        let default_god_values = [0.0, 0.0, 0.0, 0.0];
         let default_god = selective_system.add_god(&default_god_values);
         
         Self {
@@ -142,7 +142,7 @@ impl Scene {
         self.scene.borrow().scene_light
     }
 
-    pub fn change_scene_light(&self, scene_light: f32, lerp: bool) {
+    pub fn add_scene_light(&self, scene_light: f32, lerp: bool) {
         self.scene.borrow_mut().scene_light += scene_light;
         if !lerp {
             self.scene.borrow_mut().old_scene_light += scene_light;
@@ -203,12 +203,20 @@ impl Scene {
         self.scene.borrow_mut().camera = camera.clone();
     }
 
-    pub fn add_model(&self, object: Object, mesh: Mesh) -> u32 {
-        self.scene.borrow_mut().selective_system.add_model(object, mesh)
+    pub fn add_object(&self, object: Object) -> u32 {
+        self.scene.borrow_mut().selective_system.add_object(object)
+    }
+
+    pub fn add_mesh(&self, vertices: Vec<Vertex>, indices: Vec<u32>) -> [u32; 2 ] {
+        self.scene.borrow_mut().selective_system.add_mesh(vertices, indices)
     }
 
     pub fn add_light(&self, light: LightType) ->  u32 {
         self.scene.borrow_mut().selective_system.add_light(light)
+    }
+    
+    pub fn set_object_mesh(&self, id: u32, mesh_ids: &[u32; 2]) {
+        self.scene.borrow_mut().selective_system.set_object_mesh(id, mesh_ids);
     }
 
     pub fn update_staging_buffers(&mut self) {

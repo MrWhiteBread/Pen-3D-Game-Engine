@@ -49,12 +49,13 @@ fn calculate_light(light: Light, in: Vertex, color: vec3<f32>) -> vec3<f32> {
     let spec = pow(max(dot(normal, something), 0.0), shininess);
 
     let metallic = in.material[1];
-    let spec_colour = mix(vec3<f32>(0.04), color * light.lerp_color.rgb, metallic);
+    let spec_colour = mix(vec3<f32>(0.0), color * light.lerp_color.rgb, metallic);
 
     let softness = light.lerp_attributes[0];
 
     let attenuation = light.lerp_color.a * (pow(radius / dist, softness) - 1.0);
     let diffuse = color * diff * (1.0 - metallic);
     let specular = spec_colour * spec;
+
     return (diffuse + specular) * intensity * attenuation;
 }

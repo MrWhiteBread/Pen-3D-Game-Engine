@@ -18,9 +18,9 @@ impl DynamicChunks {
         });
     }
 
-    fn updating_plus<F, T, const N: usize>(updater: &mut HashSet<u32>, data: &mut DataRegistryPlus<T, N>, lid: &mut LidRegistry<T>, mut f: F) where F: FnMut(&mut T) {
+    fn updating_plus<F, T>(updater: &mut HashSet<u32>, data: &mut DataRegistryPlus<T,>, lid: &mut LidRegistry<T>, mut f: F) where F: FnMut(&mut T) {
         for i in updater.drain() {
-            let option = &mut data.type_.get_mut(&i).expect("no no?").0;
+            let option = &mut data.type_.get_mut(&i).expect("no no?");
 
             if let Some(type_) = option {
                 f(type_);
@@ -48,60 +48,60 @@ impl DynamicChunks {
         }
     }
 
-    pub fn get_type_plus<T, const N: usize>(id: &u32, data: &DataRegistryPlus<T, N>, lid: &LidRegistry<T>) -> *const T {
+    pub fn get_type_plus<T>(id: u32, data: &DataRegistryPlus<T>, lid: &LidRegistry<T>) -> *const T {
         let t;
-        let option = &data.type_.get(id).expect("type not found, you are useless if you somehow got this error, CRY").0;
+        let option = &data.type_.get(&id).expect("type not found, you are useless if you somehow got this error, CRY");
 
         if let Some(ty) = option {
             t = ty
 
         } else {
-            let index = data.type_i.get(id).expect("naah");
+            let index = data.type_i.get(&id).expect("naah");
             t = &lid.type_[*index];
         }
 
         t as *const T
     }
 
-    pub fn get_type<T>(id: &u32, data: &DataRegistry<T>, lid: &LidRegistry<T>) -> *const T {
+    pub fn get_type<T>(id: u32, data: &DataRegistry<T>, lid: &LidRegistry<T>) -> *const T {
         let t;
-        let option = data.type_.get(id).expect("type not found, you are useless if you somehow got this error, CRY");
+        let option = data.type_.get(&id).expect("type not found, you are useless if you somehow got this error, CRY");
 
         if let Some(ty) = option {
             t = ty;
 
         } else {
-            let index = data.type_i.get(id).expect("naah");
+            let index = data.type_i.get(&id).expect("naah");
             t = &lid.type_[*index];
         }
 
         t as *const T
     }
 
-    pub fn get_mut_type_plus<T, const N: usize>(id: &u32, data: &mut DataRegistryPlus<T, N>, lid: &mut LidRegistry<T>) -> *mut T {
+    pub fn get_mut_type_plus<T>(id: u32, data: &mut DataRegistryPlus<T>, lid: &mut LidRegistry<T>) -> *mut T {
         let t;
-        let option = &mut data.type_.get_mut(id).expect("type not found, you are useless if you somehow got this error, CRY").0;
+        let option = &mut data.type_.get_mut(&id).expect("type not found, you are useless if you somehow got this error, CRY");
 
         if let Some(ty) = option {
             t = ty;
 
         } else {
-            let index = data.type_i.get(id).expect("naah");
+            let index = data.type_i.get(&id).expect("naah");
             t = &mut lid.type_[*index];
         }
 
         t as *mut T
     }
 
-    pub fn get_mut_type<T>(id: &u32, data: &mut DataRegistry<T>, lid: &mut LidRegistry<T>) -> *mut T {
+    pub fn get_mut_type<T>(id: u32, data: &mut DataRegistry<T>, lid: &mut LidRegistry<T>) -> *mut T {
         let t;
-        let option = data.type_.get_mut(id).expect("type not found, you are useless if you somehow got this error, CRY");
+        let option = data.type_.get_mut(&id).expect("type not found, you are useless if you somehow got this error, CRY");
 
         if let Some(ty) = option {
             t = ty;
 
         } else {
-            let index = data.type_i.get(id).expect("naah");
+            let index = data.type_i.get(&id).expect("naah");
             t = &mut lid.type_[*index];
         }
 

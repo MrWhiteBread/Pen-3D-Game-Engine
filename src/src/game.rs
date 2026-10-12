@@ -5,10 +5,9 @@ use crate::engine::back::render::scene::Scene;
 use crate::engine::back::types::object::Object;
 use crate::engine::front::components::camera::Camera;
 use crate::engine::front::components::light::Light;
-use crate::engine::front::components::materials::METAL;
+use crate::engine::front::components::materials::{METAL, PLASTIC};
 use crate::engine::front::components::model::Model;
 use crate::engine::front::components::shapes::cuboid::{cuboid, lag_cuboid};
-use crate::engine::front::components::shapes::randomiser::randomise;
 use crate::engine::front::run::UpdateVar;
 
 pub struct Game {
@@ -19,38 +18,49 @@ pub struct Game {
     scene: Scene,
 }
 
+/*
+Due to some unknown bug when rendering more than 20k cubes
+the chunks get buggy and kinda stop and don t stop loading.
+they will render at start, I think it`s a problem with removing
+them or something, idk, i will check it out later.
+ */
+
 impl Game {
     pub fn new(mut render: Render) -> Self { // CODE EXAMPLE:
         let camera = Camera::new(&[0.0, 0.0, 0.0]);
-        let mut scene = render.create_scene(16.0);
+        let mut scene = render.create_scene(45.0); // CHUNKS SIZE
+
         scene.set_camera(&camera);
         scene.set_scene_light(0.12, false);
         render.set_scene(scene.clone());
 
         let object1 = Object::new( &[100.0, 0.0, 100.0], &[0.0, 0.0, 0.0], &[1.0, 1.0, 1.0]);
-        let cuboid1 = lag_cuboid(&[8.0, 2.0, 2.0], &[1.0, 0.1, 0.1, 1.0], &2, &METAL);
-        let mut model1 = Model::new(object1, cuboid1);
+        let mut cuboid1 = lag_cuboid(&[8.0, 2.0, 2.0], &[1.0, 0.1, 0.1, 1.0], &2, &METAL);
+        cuboid1.load(&scene);
+        let mut model1 = Model::new(object1, &mut cuboid1);
         model1.load(&scene);
 
         let object1 = Object::new( &[5.0, 0.0, 5.0], &[0.0, 0.0, 0.0], &[10.0, 1.0, 10.0]);
-        let cuboid1 = cuboid(&[1.0, 1.0, 1.0], &[1.0, 0.1, 0.1, 1.0], &METAL);
-        let mut model1 = Model::new(object1, cuboid1);
+        let mut cuboid1 = cuboid(&[1.0, 1.0, 1.0], &[1.0, 0.1, 0.1, 1.0], &METAL);
+        cuboid1.load(&scene);
+        let mut model1 = Model::new(object1, &mut cuboid1);
         model1.load(&scene);
 
         let object1 = Object::new( &[0.0, 10.0, 0.0], &[0.0, 0.0, 0.0], &[1.0, 1.0, 1.0]);
-        let cuboid1 = cuboid(&[8.0, 2.0, 2.0], &[0.0, 0.9, 0.1, 1.0], &METAL);
-        let mut model1 = Model::new(object1, cuboid1);
+        let mut cuboid1 = cuboid(&[8.0, 2.0, 2.0], &[0.0, 0.9, 0.1, 1.0], &METAL);
+        cuboid1.load(&scene);
+        let mut model1 = Model::new(object1, &mut cuboid1);
         model1.load(&scene);
 
+        let mut cuboid12 = cuboid(&[1.5, 1.5, 1.5], &[0.1, 1.0, 0.2, 1.0], &METAL);
+        cuboid12.load(&scene);
 
         for i in 0..80 {
             for j in 0..80 {
                 for k in 0..10 {
                     let object12 = Object::new(&[i as f32 * 2.0, k as f32 * -2.0, j as f32 * 2.0], &[0.0, 0.0, 0.0], &[1.0, 1.0, 1.0]);
-                    let mut cuboid12 = cuboid(&[1.5, 1.5, 1.5], &[0.1, 1.0, 0.2, 1.0], &METAL);
-                    randomise(&mut cuboid12, -0.5..0.5);
 
-                    let mut model32 = Model::new(object12, cuboid12);
+                    let mut model32 = Model::new(object12, &mut cuboid12);
                     model32.load(&scene);
                 }
             }
@@ -82,6 +92,7 @@ impl Game {
             println!("TPS: {}", update_var.tps);
             
             let usage = self.scene.get_usage();
+            println!("indices len/size: {} / {}", usage.indices_len, usage.indices_size);
             println!("vertices len/size: {} / {}", usage.vertices_len, usage.vertices_size);
             println!("objects len/size: {} / {}", usage.objects_len, usage.objects_size);
             println!("lights len/size: {} / {}", usage.lights_len, usage.lights_size);
@@ -96,11 +107,25 @@ impl Game {
 
         for key in update_var.key_handler.pressed_keys.iter() {
             match key {
-                PhysicalKey::Code(KeyCode::KeyH) if self.scene.get_scene_light() <= 1.0 - scene_light_speed => {
-                    self.scene.change_scene_light(scene_light_speed, true)
+                PhysicalKey::Code(KeyCode::KeyH) => {
+                    let difference = 1.0 - self.scene.get_scene_light();
+                    let light = if difference <= scene_light_speed {
+                        difference
+                    } else {
+                        scene_light_speed
+                    };
+
+                    self.scene.add_scene_light(light, true)
                 }
-                PhysicalKey::Code(KeyCode::KeyJ) if self.scene.get_scene_light() >= scene_light_speed => {
-                    self.scene.change_scene_light(-scene_light_speed, true);
+                PhysicalKey::Code(KeyCode::KeyJ) => {
+                    let scene_light = self.scene.get_scene_light();
+                    let light = if scene_light <= scene_light_speed {
+                        -scene_light
+                    } else {
+                        -scene_light_speed
+                    };
+
+                    self.scene.add_scene_light(light, true);
                 }
 
                 PhysicalKey::Code(KeyCode::Space) => {
@@ -142,6 +167,7 @@ impl Game {
         ];
 
         self.scene.set_default_god_pos(&god_pos);
+        self.scene.set_default_god_dist(45.0); // CHUNKS MAX DISTANCE
     }
 
     fn move_along_rotation(speed: &f32, rotation: &Quat, pos: &mut [f32; 3], direction: glam::Vec3) {
