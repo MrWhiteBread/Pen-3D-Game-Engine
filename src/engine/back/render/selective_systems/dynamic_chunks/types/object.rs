@@ -8,7 +8,7 @@ use crate::engine::front::components::mesh::Mesh;
 
 #[allow(dead_code)]
 impl DynamicChunks {
-    pub fn add_model(&mut self, object: Object, mesh: Mesh) -> u32 {
+    pub fn add_object(&mut self, object: Object, mesh: Mesh) -> u32 {
         let position = [object.center[0], object.center[1], object.center[2]];
         let nearest = self.tree.nearest_one::<SquaredEuclidean>(&position);
 
