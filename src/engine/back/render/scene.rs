@@ -42,7 +42,8 @@ impl SceneImpl {
     }
 }
 
-pub struct Scene {
+#[repr(transparent)]
+pub struct  Scene {
     scene: Rc<RefCell<SceneImpl>>,
 }
 

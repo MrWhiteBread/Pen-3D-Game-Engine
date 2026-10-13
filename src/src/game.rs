@@ -1,11 +1,11 @@
 use glam::Quat;
-use winit::keyboard::{Key, KeyCode, NamedKey, PhysicalKey, SmolStr};
+use winit::keyboard::{KeyCode, PhysicalKey};
 use crate::engine::back::render::render::Render;
 use crate::engine::back::render::scene::Scene;
 use crate::engine::back::types::object::Object;
 use crate::engine::front::components::camera::Camera;
 use crate::engine::front::components::light::Light;
-use crate::engine::front::components::materials::{METAL, PLASTIC};
+use crate::engine::front::components::materials::{METAL};
 use crate::engine::front::components::model::Model;
 use crate::engine::front::components::shapes::cuboid::{cuboid, lag_cuboid};
 use crate::engine::front::run::UpdateVar;
@@ -18,21 +18,15 @@ pub struct Game {
     scene: Scene,
 }
 
-/*
-Due to some unknown bug when rendering more than 20k cubes
-the chunks get buggy and kinda stop and don t stop loading.
-they will render at start, I think it`s a problem with removing
-them or something, idk, i will check it out later.
- */
-
 impl Game {
     pub fn new(mut render: Render) -> Self { // CODE EXAMPLE:
         let camera = Camera::new(&[0.0, 0.0, 0.0]);
-        let mut scene = render.create_scene(45.0); // CHUNKS SIZE
 
+        let mut scene = render.create_scene(45.0); // CHUNKS SIZE
         scene.set_camera(&camera);
         scene.set_scene_light(0.12, false);
-        render.set_scene(scene.clone());
+
+        render.set_scene(&scene);
 
         let object1 = Object::new( &[100.0, 0.0, 100.0], &[0.0, 0.0, 0.0], &[1.0, 1.0, 1.0]);
         let mut cuboid1 = lag_cuboid(&[8.0, 2.0, 2.0], &[1.0, 0.1, 0.1, 1.0], &2, &METAL);

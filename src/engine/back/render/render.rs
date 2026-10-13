@@ -26,10 +26,11 @@ impl Render {
         }
     }
 
-    pub fn set_scene(&mut self, mut scene: Scene) {
+    pub fn set_scene(&mut self, scene: &Scene) {
+        let mut scene = scene.clone();
         scene.set_dest_offset([0; 4]);
 
-        self.scene = Some(scene);
+        self.scene = Some(scene.clone());
         self.set_statics = true;
     }
 
