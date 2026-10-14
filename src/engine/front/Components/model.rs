@@ -72,10 +72,11 @@ impl Model {
     pub fn is_loaded(&self) -> bool {
         self.scene.is_some()
     }
-    
+
+    #[track_caller]
     pub fn load(&mut self, scene: &Scene) {
-        if self.scene.is_none() {
-            self.id = scene.add_object(self.object.take().expect("No object found"));
+        if self.scene.is_none() && let Some(object) = self.object.take() {
+            self.id = scene.add_object(object);
 
             if !self.mesh.is_null() {
                 unsafe {
@@ -89,9 +90,12 @@ impl Model {
             }
             
             self.scene = Some(scene.clone());
+        } else {
+            panic!("Model already loaded");
         }
     }
-    
+
+    #[track_caller]
     pub fn unload(&mut self) {
         //TODO: 
     }

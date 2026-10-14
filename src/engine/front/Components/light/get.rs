@@ -1,6 +1,18 @@
+use crate::engine::back::types::light::LightType;
 use crate::engine::front::components::light::Light;
 
 impl Light {
+    pub fn get_raw_light(&self) -> &LightType {
+        if let Some(scene) = &self.scene {
+            unsafe {
+                scene.get_light(self.id)
+            }
+        } else {
+            let light = self.light.as_ref().expect("Light");
+            light
+        }
+    }
+    
     pub fn get_pos(&self) -> [f32; 3] {
         if let Some(scene) = &self.scene {
             unsafe {
@@ -8,7 +20,8 @@ impl Light {
                 [light.position[0], light.position[1], light.position[2]]
             }
         } else {
-            [self.light.position[0], self.light.position[1], self.light.position[2]]
+            let light = self.light.as_ref().expect("Light");
+            [light.position[0], light.position[1], light.position[2]]
         }
     }
 
@@ -19,7 +32,8 @@ impl Light {
                 [light.rotation[0], light.rotation[1], light.rotation[2]]
             }
         } else {
-            [self.light.rotation[0], self.light.rotation[1], self.light.rotation[2]]
+            let light = self.light.as_ref().expect("Light");
+            [light.rotation[0], light.rotation[1], light.rotation[2]]
         }
     }
 
@@ -33,7 +47,8 @@ impl Light {
                 scene.get_light(self.id).color
             }
         } else {
-            self.light.color
+            let light = self.light.as_ref().expect("Light");
+            light.color
         }
     }
 
@@ -43,7 +58,8 @@ impl Light {
                 scene.get_light(self.id).attributes[0]
             }
         } else {
-            self.light.attributes[0]
+            let light = self.light.as_ref().expect("Light");
+            light.attributes[0]
         }
     }
 
@@ -53,7 +69,8 @@ impl Light {
                 scene.get_light(self.id).attributes[1]
             }
         } else {
-            self.light.attributes[1]
+            let light = self.light.as_ref().expect("Light");
+            light.attributes[1]
         }
     }
 
@@ -63,7 +80,8 @@ impl Light {
                 scene.get_light(self.id).attributes[2]
             }
         } else {
-            self.light.attributes[2]
+            let light = self.light.as_ref().expect("Light");
+            light.attributes[2]
         }
     }
 }

@@ -77,11 +77,15 @@ impl Mesh {
         self.unloaded_models.remove(&id);
     }
 
+    #[track_caller]
     pub fn load(&mut self, scene: &Scene) {
-        if self.scene.is_none() {
+        if self.scene.is_none()
+            && let Some(vertices) = self.vertices.take()
+            && let Some(indices) = self.indices.take() {
+
             self.ids = scene.add_mesh(
-                self.vertices.take().expect("empty vertices"),
-                self.indices.take().expect("empty indices")
+                vertices,
+                indices
             );
             
             unsafe {
@@ -91,11 +95,21 @@ impl Mesh {
             }
 
             self.scene = Some(scene.clone());
+        } else {
+            panic!("Mesh already loaded");
         }
     }
 
+    #[track_caller]
     pub fn unload(&mut self) {
-        //TODO
+        if let Some(scene) = self.scene.as_mut() && self.vertices.is_none() {
+            let (vertices, indices) = scene.remove_mesh(&self.ids);
+            self.vertices = Some(vertices);
+            self.indices = Some(indices);
+            //TODO: so basically if i unload this i have to remove the vec with the ids for the mesh in the selective system in the object data
+        } else {
+            panic!("Mesh is already unloaded");
+        }
     }
 }
 
@@ -111,6 +125,8 @@ impl Drop for Mesh {
             }
         }
 
-        self.unload();
+        if self.vertices.is_none() {
+            self.unload();
+        }
     }
 }

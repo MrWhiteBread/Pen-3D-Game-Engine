@@ -31,15 +31,15 @@ impl Game {
         scene.set_default_god_dist(10.0); // sets the default "god" distance
         // (a god is a point in space that renders everything around it based on its distance)
 
-        scene.set_scene_light(0.0, false); // sets scene light / global light to 0.0 without using interpolation/lerp
+        scene.set_scene_light(0.0, false); // sets scene light/global light to 0.0 without using interpolation/lerp
         render.set_scene(&mut scene); // sets the scene to render
 
-        // creates a mesh with the shape of a cuboid using size color and material
-        let mut mesh = cuboid(&[2.0, 2.0, 1.0], &[1.0, 0.5, 0.3, 1.0], &METAL);
+        // creates a mesh with the shape of a cuboid using size
+        let mut mesh = cuboid(&[2.0, 2.0, 1.0]);
         mesh.load(&scene); // loads the mesh
 
-        // creates an object using position / center rotation and size
-        let object = Object::new(&[0.0, -2.0, -5.0], &[0.0; 3], &[1.0; 3]);
+        // creates an object using position/center rotation, size, color and material
+        let object = Object::new(&[0.0, -2.0, -5.0], &[0.0; 3], &[1.0; 3], &[1.0, 0.5, 0.3, 1.0], &METAL);
         let mut model = Model::from(object, &mut mesh); // creates a model using "object" and a &mut of "mesh"
         model.load(&scene); // loads the model
 

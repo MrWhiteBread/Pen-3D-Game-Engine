@@ -1,5 +1,6 @@
 struct Object {
     rot: vec4<f32>,
+    rot_mat: mat3x3<f32>,
     old_rot: vec4<f32>,
 
     center: vec4<f32>,
@@ -9,6 +10,16 @@ struct Object {
     size: vec4<f32>,
     lerp_size: vec4<f32>,
     old_size: vec4<f32>,
+
+    color: vec4<f32>,
+    lerp_color: vec4<f32>,
+    old_color: vec4<f32>,
+
+    material: vec2<f32>,
+    lerp_material: vec2<f32>,
+    old_material: vec2<f32>,
+    
+    padding_: vec2<f32>,
 
     status: u32,
     texture_id: u32,
@@ -21,5 +32,4 @@ struct Object {
     skeleton: u32,
 
     padding: f32,
-    rot_mat: mat3x3<f32>,
 }

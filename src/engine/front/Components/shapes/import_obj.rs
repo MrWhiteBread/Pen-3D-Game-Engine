@@ -4,7 +4,7 @@ use crate::engine::back::types::vertex::Vertex;
 use crate::engine::front::components::mesh::Mesh;
 
 #[allow(dead_code)]
-pub fn import_obj(path: &str, color: &[f32; 4], material: &[f32; 2]) -> IndexMap<u32, Mesh> {
+pub fn import_obj(path: &str) -> IndexMap<u32, Mesh> {
     let mut meshes: IndexMap<u32, Mesh> = IndexMap::new();
 
     let mut vertices: Vec<Vertex> = Vec::new();
@@ -58,12 +58,8 @@ pub fn import_obj(path: &str, color: &[f32; 4], material: &[f32; 2]) -> IndexMap
                     let vertex = Vertex {
                         position,
                         old_position: position,
-                        color: *color,
-                        old_color: *color,
                         normal: [0.0, 0.0, 0.0],
                         old_normal: [0.0, 0.0, 0.0],
-                        material: *material,
-                        old_material: *material,
                         uv: [0.0, 0.0], 
                         old_uv: [0.0, 0.0],
                         skeleton: 0,

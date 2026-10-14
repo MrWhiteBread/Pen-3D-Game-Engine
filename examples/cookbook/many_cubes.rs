@@ -36,10 +36,11 @@ impl Game {
         render.set_scene(&scene); // set scene to render
 
 
-        let mut mesh = cuboid(&[1.0, 1.0, 1.0], &[1.0, 0.1, 0.1, 1.0], &METAL); // create a mesh with the shape of a cuboid using: size, color, material
+        let mut mesh = cuboid(&[1.0, 1.0, 1.0]); // create a mesh with the shape of a cuboid using size
         mesh.load(&scene); // load the mesh
 
-        let object = Object::new( &[5.0, 0.0, 5.0], &[0.0, 0.0, 0.0], &[10.0, 1.0, 10.0]); // create an object using: center, rotation and size
+        // create an object using: center, rotation, size, color and material
+        let object = Object::new( &[5.0, 0.0, 5.0], &[0.0, 0.0, 0.0], &[10.0, 1.0, 10.0], &[1.0, 0.1, 0.1, 1.0], &METAL);
         let mut model = Model::from(object, &mut mesh); // create a Model using an Object and a &mut Mesh
         model.load(&scene); // load the Model
 
@@ -47,10 +48,10 @@ impl Game {
         models.push(model); // moving model to a Vec so it doesn't go out of scope
 
 
-        let mut mesh = cuboid(&[8.0, 2.0, 2.0], &[0.0, 0.9, 0.1, 1.0], &METAL);
+        let mut mesh = cuboid(&[8.0, 2.0, 2.0]);
         mesh.load(&scene);
 
-        let object = Object::new( &[0.0, 10.0, 0.0], &[0.0, 0.0, 0.0], &[1.0, 1.0, 1.0]);
+        let object = Object::new(&[0.0, 10.0, 0.0], &[0.0, 0.0, 0.0], &[1.0, 1.0, 1.0], &[0.0, 0.9, 0.1, 1.0], &METAL);
         let mut model = Model::from(object, &mut mesh);
         model.load(&scene);
 
@@ -58,7 +59,7 @@ impl Game {
         models.push(model);
 
 
-        let mut mesh = cuboid(&[1.5, 1.5, 1.5], &[0.1, 1.0, 0.2, 1.0], &METAL);
+        let mut mesh = cuboid(&[1.5, 1.5, 1.5]);
         mesh.load(&scene);
 
         for i in 0..80 {
@@ -66,7 +67,7 @@ impl Game {
                 for k in 0..10 {
                     // places a model in a grid of 80 by 80 by 10, and uses the same mesh for every object
 
-                    let object = Object::new(&[i as f32 * 2.0, k as f32 * -2.0, j as f32 * 2.0], &[0.0, 0.0, 0.0], &[1.0, 1.0, 1.0]);
+                    let object = Object::new(&[i as f32 * 2.0, k as f32 * -2.0, j as f32 * 2.0], &[0.0, 0.0, 0.0], &[1.0, 1.0, 1.0], &[0.1, 1.0, 0.2, 1.0], &METAL);
 
                     let mut model = Model::new(object); // creates a model without a mesh
                     model.load(&scene);

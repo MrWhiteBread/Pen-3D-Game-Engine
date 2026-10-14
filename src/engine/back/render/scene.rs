@@ -216,6 +216,14 @@ impl Scene {
         self.scene.borrow_mut().selective_system.add_light(light)
     }
     
+    pub fn remove_light(&mut self, id: u32) -> LightType {
+        self.scene.borrow_mut().selective_system.remove_light(id)
+    }
+    
+    pub fn remove_mesh(&mut self, mesh_ids: &[u32; 2]) -> (Vec<Vertex>, Vec<u32>) {
+        self.scene.borrow_mut().selective_system.remove_mesh(mesh_ids)
+    }
+    
     pub fn set_object_mesh(&self, id: u32, mesh_ids: &[u32; 2]) {
         self.scene.borrow_mut().selective_system.set_object_mesh(id, mesh_ids);
     }

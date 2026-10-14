@@ -39,6 +39,8 @@ fn compute_main(@builtin(global_invocation_id) id: vec3<u32>) {
 
     obj.lerp_size = mix(obj.old_size, obj.size, globals.t);
     obj.lerp_center = mix(obj.old_center, obj.center, globals.t);
+    obj.lerp_color = mix(obj.old_color, obj.color, globals.t);
+    obj.lerp_material = mix(obj.old_material, obj.material, globals.t);
 
     let q = slerp(obj.old_rot, obj.rot, globals.t);
     obj.rot_mat = quat_to_mat3(q);

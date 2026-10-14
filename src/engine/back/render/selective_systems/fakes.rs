@@ -22,13 +22,9 @@ pub const FAKE_LIGHT: LightType = LightType {
 
 pub const FAKE_VERTEX: Vertex = Vertex {
     position: [0.0; 3],
-    color: [0.0; 4],
-    old_color: [0.0; 4],
     old_position: [0.0; 3],
     normal: [0.0; 3],
     old_normal: [0.0; 3],
-    material: [0.0; 2],
-    old_material: [0.0; 2],
     uv: [0.0; 2],
     old_uv: [0.0; 2],
     skeleton: 0,
@@ -38,15 +34,26 @@ pub const FAKE_INDEX: u32 = 0;
 
 pub const FAKE_OBJECT: Object = Object {
     rot: [0.0; 4],
+    rot_mat: [[0.0; 4]; 3],
     old_rot: [0.0; 4],
 
     center: [0.0; 4],
     lerp_center: [0.0; 4],
     old_center: [0.0; 4],
 
-    size: [1.0; 4],
+    size: [0.0; 4],
     lerp_size: [0.0; 4],
-    old_size: [1.0; 4],
+    old_size: [0.0; 4],
+
+    color: [0.0; 4],
+    lerp_color: [0.0; 4],
+    old_color: [0.0; 4],
+
+    material: [0.0; 2],
+    lerp_material: [0.0; 2],
+    old_material: [0.0; 2],
+
+    padding_: [0.0; 2],
 
     status: 0,
     texture_id: 0,
@@ -58,5 +65,4 @@ pub const FAKE_OBJECT: Object = Object {
     skeleton: 0,
 
     padding: 0.0,
-    rot_mat: [[0.0; 4]; 3],
 };

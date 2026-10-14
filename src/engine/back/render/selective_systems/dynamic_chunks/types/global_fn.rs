@@ -8,6 +8,8 @@ impl DynamicChunks {
             object.old_center = object.center;
             object.old_rot = object.rot;
             object.old_size = object.size;
+            object.old_color = object.color;
+            object.old_material = object.material;
         });
 
         Self::updating(&mut self.data.updater.lights, &mut self.data.lights, &mut self.lid.lights, |light| {

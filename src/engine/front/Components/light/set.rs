@@ -41,13 +41,15 @@ impl Light {
 
             scene.verify_light(self.id);
         } else {
-            self.light.position[0] = pos[0];
-            self.light.position[1] = pos[1];
-            self.light.position[2] = pos[2];
+            let light = self.light.as_mut().expect("Light");
+            
+            light.position[0] = pos[0];
+            light.position[1] = pos[1];
+            light.position[2] = pos[2];
 
-            self.light.old_position[0] = pos[0];
-            self.light.old_position[1] = pos[1];
-            self.light.old_position[2] = pos[2];
+            light.old_position[0] = pos[0];
+            light.old_position[1] = pos[1];
+            light.old_position[2] = pos[2];
         }
     }
 
@@ -70,15 +72,17 @@ impl Light {
                 }
             }
         } else {
-            self.light.color[0] = color[0];
-            self.light.color[1] = color[1];
-            self.light.color[2] = color[2];
-            self.light.color[3] = color[3];
+            let light = self.light.as_mut().expect("Light");
+            
+            light.color[0] = color[0];
+            light.color[1] = color[1];
+            light.color[2] = color[2];
+            light.color[3] = color[3];
 
-            self.light.old_color[0] = color[0];
-            self.light.old_color[1] = color[1];
-            self.light.old_color[2] = color[2];
-            self.light.old_color[3] = color[3];
+            light.old_color[0] = color[0];
+            light.old_color[1] = color[1];
+            light.old_color[2] = color[2];
+            light.old_color[3] = color[3];
         }
     }
 
@@ -95,8 +99,10 @@ impl Light {
                 }
             }
         } else {
-            self.light.attributes[0] = softness;
-            self.light.old_attributes[0] = softness;
+            let light = self.light.as_mut().expect("Light");
+            
+            light.attributes[0] = softness;
+            light.old_attributes[0] = softness;
         }
     }
 
@@ -113,8 +119,10 @@ impl Light {
                 }
             }
         } else {
-            self.light.attributes[1] = range;
-            self.light.old_attributes[1] = range;
+            let light = self.light.as_mut().expect("Light");
+            
+            light.attributes[1] = range;
+            light.old_attributes[1] = range;
         }
     }
 
@@ -131,8 +139,10 @@ impl Light {
                 }
             }
         } else {
-            self.light.attributes[2] = fov;
-            self.light.old_attributes[2] = fov;
+            let light = self.light.as_mut().expect("Light");
+            
+            light.attributes[2] = fov;
+            light.old_attributes[2] = fov;
         }
     }
 }

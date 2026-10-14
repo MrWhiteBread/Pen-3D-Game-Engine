@@ -86,7 +86,7 @@ pub fn deferred_v(device: &wgpu::Device, buffers: &Buffers, shaders: &Shaders) -
                     step_mode: VertexStepMode::Instance,
                     attributes: &[VertexAttribute {
                         offset: 0,
-                        shader_location: 10,
+                        shader_location: 6,
                         format: VertexFormat::Uint32,
                     }]
                 })

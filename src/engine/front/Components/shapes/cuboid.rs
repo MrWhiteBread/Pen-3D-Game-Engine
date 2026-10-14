@@ -1,7 +1,7 @@
 use crate::engine::back::types::vertex::Vertex;
 use crate::engine::front::components::mesh::Mesh;
 
-pub fn cuboid(size: &[f32; 3], color: &[f32; 4], material: &[f32; 2]) -> Mesh {
+pub fn cuboid(size: &[f32; 3]) -> Mesh {
     let mut vertices = Vec::with_capacity(24);
     let mut indices = Vec::with_capacity(36);
 
@@ -99,12 +99,8 @@ pub fn cuboid(size: &[f32; 3], color: &[f32; 4], material: &[f32; 2]) -> Mesh {
         vertices.push(Vertex {
             position: vertices_list[i],
             old_position: vertices_list[i],
-            color: *color,
-            old_color: *color,
             normal: normals[i / 4],
             old_normal: normals[i / 4],
-            material: *material,
-            old_material: *material,
             uv: uvs[i],
             old_uv: uvs[i],
             skeleton: 0,
@@ -120,7 +116,7 @@ pub fn cuboid(size: &[f32; 3], color: &[f32; 4], material: &[f32; 2]) -> Mesh {
     Mesh::new(vertices, indices, radius)
 }
 
-pub fn lag_cuboid(size: &[f32; 3], color: &[f32; 4], cubes: &u32, material: &[f32; 2]) -> Mesh {
+pub fn lag_cuboid(size: &[f32; 3], cubes: &u32) -> Mesh {
     let mut vertices = Vec::with_capacity(24 * *cubes as usize);
     let mut indices = Vec::with_capacity(36 * *cubes as usize);
 
@@ -219,12 +215,8 @@ pub fn lag_cuboid(size: &[f32; 3], color: &[f32; 4], cubes: &u32, material: &[f3
             vertices.push(Vertex {
                 position: vertices_list[i],
                 old_position: vertices_list[i],
-                color: *color,
-                old_color: *color,
                 normal: normals[i / 4],
                 old_normal: normals[i / 4],
-                material: *material,
-                old_material: *material,
                 uv: uvs[i],
                 old_uv: uvs[i],
                 skeleton: 0,

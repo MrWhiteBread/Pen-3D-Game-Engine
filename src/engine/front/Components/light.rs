@@ -8,9 +8,9 @@ use crate::engine::back::render::scene::Scene;
 use crate::engine::back::types::light::LightType;
 pub struct Light {
     scene: Option<Scene>,
-    light: LightType,
+    light: Option<LightType>,
     angle: [f32; 3],
-    
+
     id: u32,
 }
 
@@ -25,27 +25,38 @@ impl Light {
         
         Self {
             scene: None,
-            light: LightType::new(position, rot, color, attributes),
+            light: Some(LightType::new(position, rot, color, attributes)),
             angle: rotation,
 
             id: 0,
         }
     }
-    
+
+    #[track_caller]
     pub fn load(&mut self, scene: &Scene) {
-        if self.scene.is_none() {
-            self.id = scene.add_light(self.light);
+        if self.scene.is_none() && let Some(light) = self.light.take() {
+            self.id = scene.add_light(light);
             self.scene = Some(scene.clone());
+        } else {
+            panic!("Light is already loaded");
         }
     }
-    
+
+    #[track_caller]
     pub fn unload(&mut self) {
-        //TODO
+        if let Some(scene) = self.scene.as_mut() && self.light.is_none(){
+            self.light = Some(scene.remove_light(self.id));
+        } else {
+            panic!("Light is already unloaded");
+        }
     }
 }
 
 impl Drop for Light {
     fn drop(&mut self) {
+        if self.light.is_some() {
+            return;
+        }
         self.unload();
     }
 }

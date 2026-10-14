@@ -18,13 +18,15 @@ impl Light {
                 }
             }
         } else {
-            self.light.rotation[0] = rot[0];
-            self.light.rotation[1] = rot[1];
-            self.light.rotation[2] = rot[2];
+            let light = self.light.as_mut().expect("Light");
+            
+            light.rotation[0] = rot[0];
+            light.rotation[1] = rot[1];
+            light.rotation[2] = rot[2];
 
-            self.light.old_rotation[0] = rot[0];
-            self.light.old_rotation[1] = rot[2];
-            self.light.old_rotation[1] = rot[2];
+            light.old_rotation[0] = rot[0];
+            light.old_rotation[1] = rot[2];
+            light.old_rotation[1] = rot[2];
         }
     }
 }

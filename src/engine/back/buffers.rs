@@ -42,7 +42,7 @@ impl Buffers {
     #[allow(unused_variables)]
     pub fn new(device: &Device, info: &AdapterInfo, queue: Arc<Queue>, color_texture_view: TextureView, color_texture_size: Extent3d)-> (Self, StagingBuffers) {
         //TODO: make buffers dynamic, until then i will limit
-        let max_objects = 500_000;
+        let max_objects = 300_000;
         let max_diff_objects = 500_000;
         let max_diff_object_ids = 500_000;
 

@@ -1,10 +1,7 @@
-use std::collections::HashSet;
 use kiddo::SquaredEuclidean;
 use crate::engine::back::render::selective_systems::dynamic_chunks::data::{Chunk, Data, LID};
 use crate::engine::back::render::selective_systems::dynamic_chunks::DynamicChunks;
-use crate::engine::back::render::selective_systems::dynamic_chunks::registry::{ DataRegistryArray, LidRegistryArray};
 use crate::engine::back::types::object::Object;
-use crate::engine::front::components::mesh::Mesh;
 
 #[allow(dead_code)]
 impl DynamicChunks {
@@ -29,6 +26,8 @@ impl DynamicChunks {
         let chunk_id = self.new_chunk(position, false);
         self.add(chunk_id, object)
     }
+
+    // TODO: pub fn remove_object(&mut self, id: u32) -> Object {}
 
     fn add(&mut self, chunk_id: u32, object: Object) -> u32 {
         let chunk = self.chunks.get_mut(&chunk_id).expect("chunk not found");
@@ -60,6 +59,11 @@ impl DynamicChunks {
         chunk.objects.insert(id);
 
         id
+    }
+
+    pub fn remove_object_mesh(&mut self, id: u32) {
+        // TODO: empty the payload and if loaded you have to decrement the mesh activators and if it gets empty to unload the mesh, basically
+        // TODO: use remove_data like the global one to firstly unload then manually remove the payload
     }
 
     pub fn set_object_mesh(&mut self, id: u32, mesh_ids: &[u32; 2]) {

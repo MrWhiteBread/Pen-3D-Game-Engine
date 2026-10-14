@@ -4,9 +4,19 @@ use crate::engine::front::components::model::Model;
 
 impl Model {
     pub fn set_mesh(&mut self, mesh: &mut Mesh) {
+        if !self.mesh.is_null() {
+            unsafe {
+                if self.object.is_none() {
+                    (*self.mesh)._remove_loaded_model(self.mesh_id);
+                } else {
+                    (*self.mesh)._remove_unloaded_model(self.mesh_id);
+                }
+            }
+        }
+        
         self.mesh = mesh;
 
-        if let Some(scene) = self.scene.as_ref() {
+        if let Some(scene) = self.scene.as_ref() && self.object.is_none() {
             unsafe {
                 scene.set_object_mesh(self.id, (*self.mesh).get_ids());
                 let object = scene.get_mut_object(self.id);

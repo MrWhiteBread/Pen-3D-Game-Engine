@@ -27,6 +27,24 @@ impl DynamicChunks {
         self.add_l(chunk_id, light)
     }
 
+    pub fn remove_light(&mut self, id: u32) -> LightType {
+        if self.data.lights.type_.get(&id).is_none() {
+            Self::swap_remove_data(
+                id,
+                &mut self.data.lights,
+                &mut self.lid.lights,
+                &mut |_| {}
+            );
+        }
+        let chunk_id = self.data.lights.chunk.remove(&id).expect("chunk not found for light");
+
+        self.data.lights.ids.remove(id);
+        self.data.lights.type_i.remove(&id);
+        self.chunks.get_mut(&chunk_id).expect("chunk not found").lights.remove(&id);
+
+        self.data.lights.type_.remove(&id).expect("light type not found").expect("NO")
+    }
+
     fn add_l(&mut self, chunk_id: u32, light: LightType) -> u32 {
         let chunk = self.chunks.get_mut(&chunk_id).expect("chunk not found");
 
