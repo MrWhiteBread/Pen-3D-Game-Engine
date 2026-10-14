@@ -96,7 +96,6 @@ pub async fn run(run_var: RunVar) {
         globals_updated.store(true, Ordering::Relaxed); // tells state to render
 
         if last_time.elapsed().as_secs_f64() > 1.0 {
-            //println!("TPS: {}", ticks_count.load(Ordering::Relaxed));
             tps = ticks_count;
             ticks_count = 0;
             last_time = Instant::now();

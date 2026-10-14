@@ -10,7 +10,7 @@ pub struct Light {
     scene: Option<Scene>,
     light: LightType,
     angle: [f32; 3],
-
+    
     id: u32,
 }
 
@@ -37,5 +37,15 @@ impl Light {
             self.id = scene.add_light(self.light);
             self.scene = Some(scene.clone());
         }
+    }
+    
+    pub fn unload(&mut self) {
+        //TODO
+    }
+}
+
+impl Drop for Light {
+    fn drop(&mut self) {
+        self.unload();
     }
 }

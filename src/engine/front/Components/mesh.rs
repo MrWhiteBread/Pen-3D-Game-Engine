@@ -11,7 +11,6 @@ pub struct Mesh {
     vertices: Option<Vec<Vertex>>,
     indices: Option<Vec<Index>>,
     radius: f32,
-    loaded: bool,
 
     scene: Option<Scene>,
     loaded_models: HashMap<Id, *mut Model>,
@@ -27,7 +26,6 @@ impl Mesh {
             vertices: Some(vertices),
             indices: Some(indices),
             radius,
-            loaded: false,
 
             scene: None,
             loaded_models: HashMap::new(),
@@ -43,7 +41,7 @@ impl Mesh {
     }
     
     pub fn is_loaded(&self) -> bool {
-        self.loaded
+        self.scene.is_some()
     }
     
     pub fn get_radius(&self) -> f32 {
@@ -81,8 +79,6 @@ impl Mesh {
 
     pub fn load(&mut self, scene: &Scene) {
         if self.scene.is_none() {
-            self.loaded = true;
-            
             self.ids = scene.add_mesh(
                 self.vertices.take().expect("empty vertices"),
                 self.indices.take().expect("empty indices")
@@ -96,5 +92,25 @@ impl Mesh {
 
             self.scene = Some(scene.clone());
         }
+    }
+
+    pub fn unload(&mut self) {
+        //TODO
+    }
+}
+
+impl Drop for Mesh {
+    fn drop(&mut self) {
+        unsafe {
+            for model in self.loaded_models.values() {
+                (**model).divorce_mesh();
+            }
+
+            for model in self.unloaded_models.values() {
+                (**model).divorce_mesh();
+            }
+        }
+
+        self.unload();
     }
 }
