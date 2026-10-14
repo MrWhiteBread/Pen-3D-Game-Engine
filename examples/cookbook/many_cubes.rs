@@ -71,9 +71,11 @@ impl Game {
                     let mut model = Model::new(object); // creates a model without a mesh
                     model.load(&scene);
                     model.set_mesh(&mut mesh); // gives the model a mesh
+                    models.push(model);
                 }
             }
         }
+        meshes.push(mesh);
 
         // creates a light using: position, rotation, color, softness, range, and fov
         let mut light = Light::new([0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [1.0, 0.2, 1.0, 0.5], 1.2, 30.0, 360.0);
