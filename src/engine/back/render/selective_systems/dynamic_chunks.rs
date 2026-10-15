@@ -1,7 +1,7 @@
 mod runners;
 mod registry;
 mod data;
-mod create;
+mod chunk;
 mod types;
 
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -18,10 +18,8 @@ pub struct DynamicChunks {
     chunks_size: f32,
 
     tree: kiddo::float::kdtree::KdTree<f32, u32, 3, 64, u32>,
-    ids: HashMap<u32, HashSet<u32>>,
     chunks: HashMap<u32, Chunk>,
-    new_chunks: IndexMap<u32, HashSet<u32>>,
-    new_chunks_ids: IndexSet<u32>,
+    new_chunks: IndexSet<u32>,
 
     gods: HashMap<u32, [f32; 4]>, // x,  y,  z,  max distance
 
@@ -29,7 +27,6 @@ pub struct DynamicChunks {
     lid: LID,
     usage: Usage,
 
-    tree_ids: Id32,
     chunks_ids: Id32,
     gods_ids: Id32,
 }
@@ -56,10 +53,8 @@ impl DynamicChunks {
             chunks_size,
 
             tree: kiddo::float::kdtree::KdTree::new(),
-            ids: HashMap::new(),
             chunks: HashMap::new(),
-            new_chunks: IndexMap::new(),
-            new_chunks_ids: IndexSet::new(),
+            new_chunks: IndexSet::new(),
 
             gods: HashMap::new(),
 
@@ -67,7 +62,6 @@ impl DynamicChunks {
             lid: LID::new(default_space, atlas_size, atlas_chunks_size as usize),
             usage: Usage::new(),
 
-            tree_ids: Id32::new(),
             chunks_ids: Id32::new(),
             gods_ids: Id32::new(),
         }
@@ -107,25 +101,14 @@ impl DynamicChunks {
                 &mut data.objects,
                 &mut lid.objects,
                 &mut |object, payload| {
-                    object.status = 0;
-                    
-                    if let Some(vertices_id) = payload[0].get(0) {
-                        Self::remove_data_array(
-                            *vertices_id,
-                            &mut data.vertices,
-                            &mut lid.vertices,
-                            &mut |_| {}
-                        );
-                    }
-
-                    if let Some(indices_id) = payload[1].get(0) {
-                        Self::remove_data_array(
-                            *indices_id,
-                            &mut data.indices,
-                            &mut lid.indices,
-                            &mut |_| {}
-                        );
-                    }
+                    Self::remove_object_data(
+                        object,
+                        payload,
+                        &mut data.vertices,
+                        &mut data.indices,
+                        &mut lid.vertices,
+                        &mut lid.indices
+                    );
                 }
             );
         });
@@ -142,29 +125,14 @@ impl DynamicChunks {
                 &mut data.objects,
                 &mut lid.objects,
                 &mut |object, payload| {
-                    if let Some(vertices_id) = payload[0].get(0) {
-                        Self::add_data_array(
-                            *vertices_id,
-                            &mut data.vertices,
-                            &mut lid.vertices,
-                        );
-                        
-                        let ver = data.vertices.type_i.get(&vertices_id).expect("no vertex id");
-                        object.base_vertex = ver[0] as i32;
-                    }
-
-                    if let Some(indices_id) = payload[1].get(0) {
-                        Self::add_data_array(
-                            *indices_id,
-                            &mut data.indices,
-                            &mut lid.indices,
-                        );
-                        
-                        let ind = data.indices.type_i.get(&indices_id).expect("no index id");
-
-                        object.first_index = ind[0] as u32;
-                        object.index_count = (ind[1] - ind[0]) as u32;
-                    }
+                    Self::add_object_data(
+                        object,
+                        payload,
+                        &mut data.vertices,
+                        &mut data.indices,
+                        &mut lid.vertices,
+                        &mut lid.indices
+                    );
                 }
             );
         });
@@ -183,6 +151,8 @@ impl DynamicChunks {
         write_data(&staging_buffers.queue, &staging_buffers.object_staging, &self.lid.objects.type_, &mut staging_buffers.object_count, self.lid.objects.ids.size());
         write_data(&staging_buffers.queue, &staging_buffers.vertices_staging, &self.lid.vertices.type_, &mut staging_buffers.vertices_count, self.lid.vertices.ids.size());
         write_data(&staging_buffers.queue, &staging_buffers.indices_staging, &self.lid.indices.type_, &mut staging_buffers.indices_count, self.lid.indices.ids.size());
+
+        self.usage.chunks_len = self.lid.chunks.len() as u32;
 
         self.usage.vertices_len = self.lid.vertices.ids.len() as u32;
         self.usage.indices_len = self.lid.indices.ids.len() as u32;
@@ -204,6 +174,8 @@ impl DynamicChunks {
 
 #[allow(dead_code)]
 pub struct Usage {
+    pub chunks_len: u32,
+
     pub vertices_len: u32,
     pub indices_len: u32,
     pub objects_len: u32,
@@ -218,6 +190,8 @@ pub struct Usage {
 impl Usage {
     pub fn new() -> Self {
         Self {
+            chunks_len: 0,
+
             vertices_len: 0,
             indices_len: 0,
             objects_len: 0,
@@ -232,6 +206,8 @@ impl Usage {
     
     pub fn clone(&self) -> Self {
         Self {
+            chunks_len: self.chunks_len,
+
             vertices_len: self.vertices_len,
             indices_len: self.indices_len,
             objects_len: self.objects_len,

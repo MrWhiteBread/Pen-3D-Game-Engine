@@ -1,25 +1,83 @@
 use kiddo::SquaredEuclidean;
 use crate::engine::back::render::selective_systems::dynamic_chunks::data::{Chunk, Data, LID};
 use crate::engine::back::render::selective_systems::dynamic_chunks::DynamicChunks;
+use crate::engine::back::render::selective_systems::dynamic_chunks::registry::{DataRegistryArray, LidRegistryArray};
 use crate::engine::back::types::object::Object;
+use crate::engine::back::types::vertex::Vertex;
 
 #[allow(dead_code)]
 impl DynamicChunks {
+    pub(crate) fn remove_object_data(
+        object: &mut Object,
+        payload: &Vec<Vec<u32>>,
+        data_v: &mut DataRegistryArray<Vertex>, data_i: &mut DataRegistryArray<u32>,
+        lid_v: &mut LidRegistryArray<Vertex>, lid_i: &mut LidRegistryArray<u32>,) {
+
+        object.status = 0;
+
+        if let Some(vertices_id) = payload[0].get(0) {
+            Self::remove_data_array(
+                *vertices_id,
+                data_v,
+                lid_v,
+                &mut |_| {}
+            );
+        }
+
+        if let Some(indices_id) = payload[1].get(0) {
+            Self::remove_data_array(
+                *indices_id,
+                data_i,
+                lid_i,
+                &mut |_| {}
+            );
+        }
+    }
+
+    pub(crate) fn add_object_data(
+        object: &mut Object,
+        payload: &Vec<Vec<u32>>,
+        data_v: &mut DataRegistryArray<Vertex>, data_i: &mut DataRegistryArray<u32>,
+        lid_v: &mut LidRegistryArray<Vertex>, lid_i: &mut LidRegistryArray<u32>,) {
+
+        if let Some(vertices_id) = payload[0].get(0) {
+            Self::add_data_array(
+                *vertices_id,
+                data_v,
+                lid_v,
+            );
+
+            let ver = data_v.type_i.get(&vertices_id).expect("no vertex id");
+            object.base_vertex = ver[0] as i32;
+        }
+
+        if let Some(indices_id) = payload[1].get(0) {
+            Self::add_data_array(
+                *indices_id,
+                data_i,
+                lid_i,
+            );
+
+            let ind = data_i.type_i.get(&indices_id).expect("no index id");
+
+            object.first_index = ind[0] as u32;
+            object.index_count = (ind[1] - ind[0]) as u32;
+        }
+    }
+
     pub fn add_object(&mut self, object: Object) -> u32 {
         let position = [object.center[0], object.center[1], object.center[2]];
         let nearest = self.tree.nearest_one::<SquaredEuclidean>(&position);
 
-        if nearest.distance <= self.chunks_size {
-            for chunk_id in self.ids.get(&nearest.item).expect("Nearest not found").iter() {
-                let chunk = self.chunks.get_mut(chunk_id).expect("chunk not found");
+        if nearest.distance <= self.chunks_size * self.chunks_size {
+            let chunk = self.chunks.get_mut(&nearest.item).expect("chunk not found");
 
-                if !chunk.private {
-                    if chunk.loaded {
-                        return self.add_loaded(*chunk_id, object);
-                    }
-
-                    return self.add(*chunk_id, object);
+            if !chunk.private {
+                if chunk.loaded {
+                    return self.add_loaded(nearest.item, object);
                 }
+
+                return self.add(nearest.item, object);
             }
         }
 
@@ -27,7 +85,21 @@ impl DynamicChunks {
         self.add(chunk_id, object)
     }
 
-    // TODO: pub fn remove_object(&mut self, id: u32) -> Object {}
+   /* pub fn remove_object(&mut self, id: u32) -> Object {
+        if self.data.objects.type_.get(&id).expect("type not found").is_none() {
+            Self::swap_remove_data_plus(id, &mut self.data.objects, &mut self.lid.objects, &mut |object, payload| {
+                Self::remove_object_data(
+                    object,
+                    payload,
+                    &mut self.data.vertices,
+                    &mut self.data.indices,
+                    &mut self.lid.vertices,
+                    &mut self.lid.indices
+                );
+            });
+
+        }
+    }*/
 
     fn add(&mut self, chunk_id: u32, object: Object) -> u32 {
         let chunk = self.chunks.get_mut(&chunk_id).expect("chunk not found");
@@ -62,8 +134,43 @@ impl DynamicChunks {
     }
 
     pub fn remove_object_mesh(&mut self, id: u32) {
-        // TODO: empty the payload and if loaded you have to decrement the mesh activators and if it gets empty to unload the mesh, basically
-        // TODO: use remove_data like the global one to firstly unload then manually remove the payload
+        let vec = self.data.objects.payload.get_mut(&id).expect("object not found");
+        let mesh_ids = [
+            vec[0][0],
+            vec[0][1],
+        ];
+
+        vec[0] = Vec::new();
+        vec[1] = Vec::new();
+
+        if self.data.objects.type_.get(&id).expect("type not found").is_none() {
+            Self::remove_data_array(
+                mesh_ids[0],
+                &mut self.data.vertices,
+                &mut self.lid.vertices,
+                &mut |_| {}
+            );
+
+            Self::remove_data_array(
+                mesh_ids[1],
+                &mut self.data.indices,
+                &mut self.lid.indices,
+                &mut |_| {}
+            );
+
+            let index = self.data.objects.type_i.get(&id).expect("type not found");
+            let object = &mut self.lid.objects.type_[*index];
+
+            object.base_vertex = 0;
+            object.first_index = 0;
+            object.index_count = 0;
+        } else {
+            let object = &mut self.data.objects.type_.get_mut(&id).expect("type not found").as_mut().expect("type not found");
+
+            object.base_vertex = 0;
+            object.first_index = 0;
+            object.index_count = 0;
+        }
     }
 
     pub fn set_object_mesh(&mut self, id: u32, mesh_ids: &[u32; 2]) {
@@ -71,10 +178,7 @@ impl DynamicChunks {
         vec[0] = Vec::from([mesh_ids[0]]);
         vec[1] = Vec::from([mesh_ids[1]]);
 
-        let chunk_id = self.data.objects.chunk.get(&id).expect("chunk id not found");
-        let chunk = self.chunks.get(chunk_id).expect("chunk not found");
-
-        if chunk.loaded {
+        if self.data.objects.type_.get(&id).expect("type not found").is_none() {
             Self::add_data_array(
                 mesh_ids[0],
                 &mut self.data.vertices,
@@ -97,6 +201,7 @@ impl DynamicChunks {
 
             object.first_index = ind[0] as u32;
             object.index_count = (ind[1] - ind[0]) as u32;
+
         }
     }
 
@@ -115,51 +220,25 @@ impl DynamicChunks {
     fn switch_object_chunk(data: &mut Data, chunk: &mut Chunk, chunk_id: u32, id: u32, loaded: bool, lid: &mut LID) {
         if loaded && !chunk.loaded {
             Self::swap_remove_data_plus(id, &mut data.objects, &mut lid.objects, &mut |object, payload| {
-                object.status = 0;
-
-                if let Some(vertices_id) = payload[0].get(0) {
-                    Self::remove_data_array(
-                        *vertices_id,
-                        &mut data.vertices,
-                        &mut lid.vertices,
-                        &mut |_| {}
-                    );
-                }
-
-                if let Some(indices_id) = payload[1].get(0) {
-                    Self::remove_data_array(
-                        *indices_id,
-                        &mut data.indices,
-                        &mut lid.indices,
-                        &mut |_| {}
-                    );
-                }
+                Self::remove_object_data(
+                    object,
+                    payload,
+                    &mut data.vertices,
+                    &mut data.indices,
+                    &mut lid.vertices,
+                    &mut lid.indices
+                );
             });
         } else if !loaded && chunk.loaded {
             Self::add_data_plus(id, &mut data.objects, &mut lid.objects, &mut |object, payload| {
-                if let Some(vertices_id) = payload[0].get(0) {
-                    let ver = data.vertices.type_i.get(&vertices_id).expect("no vertex id");
-                    object.base_vertex = ver[0] as i32;
-
-                    Self::add_data_array(
-                        *vertices_id,
-                        &mut data.vertices,
-                        &mut lid.vertices,
-                    );
-                }
-
-                if let Some(indices_id) = payload[1].get(0) {
-                    let ind = data.indices.type_i.get(&indices_id).expect("no index id");
-
-                    object.first_index = ind[0] as u32;
-                    object.index_count = (ind[1] - ind[0]) as u32;
-
-                    Self::add_data_array(
-                        *indices_id,
-                        &mut data.indices,
-                        &mut lid.indices,
-                    );
-                }
+                Self::add_object_data(
+                    object,
+                    payload,
+                    &mut data.vertices,
+                    &mut data.indices,
+                    &mut lid.vertices,
+                    &mut lid.indices
+                );
             });
         }
 
@@ -189,17 +268,16 @@ impl DynamicChunks {
 
             let loaded = chunk.loaded;
             chunk.objects.remove(&id);
+            self.remove_empty_chunk(*chunk_id);
 
             let nearest = self.tree.nearest_one::<SquaredEuclidean>(&pos);
 
-            if nearest.distance <= self.chunks_size {
-                for chunk_id in self.ids.get(&nearest.item).expect("Nearest not found").iter() {
-                    let chunk = self.chunks.get_mut(chunk_id).expect("chunk not found");
+            if nearest.distance <= self.chunks_size * self.chunks_size {
+                let chunk = self.chunks.get_mut(&nearest.item).expect("chunk not found");
 
-                    if !chunk.private {
-                        Self::switch_object_chunk(&mut self.data, chunk, *chunk_id, id, loaded, &mut self.lid);
-                        return;
-                    }
+                if !chunk.private {
+                    Self::switch_object_chunk(&mut self.data, chunk, nearest.item, id, loaded, &mut self.lid);
+                    return;
                 }
             }
 

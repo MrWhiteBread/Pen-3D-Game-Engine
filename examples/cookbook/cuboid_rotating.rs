@@ -25,10 +25,10 @@ pub struct Game {
 impl Game {
     pub fn new(mut render: Render) -> Self {
         let camera = Camera::new(&[0.0, 0.0, 0.0]); // creates a camera using position
-        let mut scene = render.create_scene(10.0); //creates a scene using chunk size
+        let mut scene = render.create_scene(5); //creates a scene using chunk size
 
         scene.set_camera(&camera); // sets the camera
-        scene.set_default_god_dist(10.0); // sets the default "god" distance
+        scene.set_default_god_dist(10); // sets the default "god" distance
         // (a god is a point in space that renders everything around it based on its distance)
 
         scene.set_scene_light(0.0, false); // sets scene light/global light to 0.0 without using interpolation/lerp

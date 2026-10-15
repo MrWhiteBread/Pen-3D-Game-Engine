@@ -116,9 +116,9 @@ pub fn cuboid(size: &[f32; 3]) -> Mesh {
     Mesh::new(vertices, indices, radius)
 }
 
-pub fn lag_cuboid(size: &[f32; 3], cubes: &u32) -> Mesh {
-    let mut vertices = Vec::with_capacity(24 * *cubes as usize);
-    let mut indices = Vec::with_capacity(36 * *cubes as usize);
+pub fn lag_cuboid(size: &[f32; 3], cubes: u32) -> Mesh {
+    let mut vertices = Vec::with_capacity(24 * cubes as usize);
+    let mut indices = Vec::with_capacity(36 * cubes as usize);
 
     let w = size[0];
     let h = size[1];
@@ -210,7 +210,7 @@ pub fn lag_cuboid(size: &[f32; 3], cubes: &u32) -> Mesh {
         [-w / 2.0, -h / 2.0, d / 2.0],
     ];
 
-    for _ in 0..*cubes {
+    for _ in 0..cubes {
         for i in 0..vertices_list.len() {
             vertices.push(Vertex {
                 position: vertices_list[i],

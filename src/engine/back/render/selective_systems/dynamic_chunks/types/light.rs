@@ -9,17 +9,15 @@ impl DynamicChunks {
         let position = [light.position[0], light.position[1], light.position[2]];
         let nearest = self.tree.nearest_one::<SquaredEuclidean>(&position);
 
-        if nearest.distance <= self.chunks_size {
-            for chunk_id in self.ids.get(&nearest.item).expect("Nearest not found").iter() {
-                let chunk = self.chunks.get_mut(chunk_id).expect("chunk not found");
+        if nearest.distance <= self.chunks_size * self.chunks_size {
+            let chunk = self.chunks.get_mut(&nearest.item).expect("chunk not found");
 
-                if !chunk.private {
-                    if chunk.loaded {
-                        return self.add_loaded_l(*chunk_id, light);
-                    }
-
-                    return self.add_l(*chunk_id, light);
+            if !chunk.private {
+                if chunk.loaded {
+                    return self.add_loaded_l(nearest.item, light);
                 }
+
+                return self.add_l(nearest.item, light);
             }
         }
 
@@ -41,6 +39,7 @@ impl DynamicChunks {
         self.data.lights.ids.remove(id);
         self.data.lights.type_i.remove(&id);
         self.chunks.get_mut(&chunk_id).expect("chunk not found").lights.remove(&id);
+        self.remove_empty_chunk(chunk_id);
 
         self.data.lights.type_.remove(&id).expect("light type not found").expect("NO")
     }
@@ -120,17 +119,16 @@ impl DynamicChunks {
 
             let loaded = chunk.loaded;
             chunk.lights.remove(&id);
+            self.remove_empty_chunk(*chunk_id);
 
             let nearest = self.tree.nearest_one::<SquaredEuclidean>(&pos);
 
-            if nearest.distance <= self.chunks_size {
-                for chunk_id in self.ids.get(&nearest.item).expect("Nearest not found").iter() {
-                    let chunk = self.chunks.get_mut(chunk_id).expect("chunk not found");
+            if nearest.distance <= self.chunks_size * self.chunks_size {
+                let chunk = self.chunks.get_mut(&nearest.item).expect("chunk not found");
 
-                    if !chunk.private {
-                        Self::switch_light_chunk(&mut self.data.lights, chunk, *chunk_id, id, loaded, &mut self.lid.lights);
-                        return;
-                    }
+                if !chunk.private {
+                    Self::switch_light_chunk(&mut self.data.lights, chunk, nearest.item, id, loaded, &mut self.lid.lights);
+                    return;
                 }
             }
 

@@ -7,50 +7,21 @@ use crate::engine::back::render::selective_systems::dynamic_chunks::registry::{D
 impl DynamicChunks {
     pub fn iter_add_chunks<F>(&mut self, visible_chunks: &IndexSet<u32>, mut f: F) where F: FnMut(&mut LID, &mut Chunk, &mut Data) {
         let to_add = visible_chunks.difference(&self.lid.chunks).cloned().collect::<IndexSet<_>>();
+        self.add_chunks(to_add, &mut f);
 
-        for id in &to_add {
-            let chunks = self.ids.get(id).expect("chunks not found");
-            let mut is = self.new_chunks_ids.contains(id);
+        let to_add = visible_chunks.intersection(&self.new_chunks).cloned().collect::<IndexSet<_>>();
+        self.add_chunks(to_add, &mut f);
+    }
 
-            for chunk_id in chunks.iter() {
-                if is {
-                    let cks = self.new_chunks.get_mut(id).expect("nahh man");
+    fn add_chunks<F>(&mut self, to_add: IndexSet<u32>, f: &mut F) where F: FnMut(&mut LID, &mut Chunk, &mut Data) {
+        for chunk_id in &to_add {
+            self.new_chunks.swap_remove(chunk_id);
+            self.lid.chunks.insert(*chunk_id);
 
-                    if cks.contains(chunk_id) {
-                        cks.remove(chunk_id);
-                        if cks.is_empty() {
-                            self.new_chunks.swap_remove(id);
-                            self.new_chunks_ids.swap_remove(id);
-                            is = false;
-                        }
-                    }
-                }
+            let chunk = self.chunks.get_mut(chunk_id).expect("chunk not found");
+            chunk.loaded = true;
 
-                let chunk = self.chunks.get_mut(chunk_id).expect("chunk not found");
-
-                if !chunk.loaded {
-                    chunk.loaded = true;
-                    self.lid.chunks.insert(*chunk_id);
-
-                    f(&mut self.lid, chunk, &mut self.data);
-                }
-            }
-        }
-
-        let to_add = visible_chunks.intersection(&self.new_chunks_ids).cloned().collect::<IndexSet<_>>();
-
-        for id in &to_add {
-            let chunks = self.new_chunks.get_mut(id).expect("chunk not found");
-
-            for chunk_id in chunks.iter() {
-                let chunk = self.chunks.get_mut(chunk_id).expect("chunk not found");
-
-                if !chunk.loaded {
-                    self.lid.chunks.insert(*chunk_id);
-
-                    f(&mut self.lid, chunk, &mut self.data);
-                }
-            }
+            f(&mut self.lid, chunk, &mut self.data);
         }
     }
 
@@ -80,7 +51,7 @@ impl DynamicChunks {
     pub fn add_data_plus<F, T>(type_id: u32, data: &mut DataRegistryPlus<T>, lid: &mut LidRegistry<T>, f: &mut F) 
     where F: FnMut(&mut T, &Vec<Vec<u32>>) {
         let data_ = data.type_.get_mut(&type_id).expect("no type found");
-        let mut type_ = data_.take().expect("no object found in option");
+        let mut type_ = data_.take().expect("no type found in option");
         let payload = data.payload.get(&type_id).expect("no payload found");
         let i = lid.ids.get_id() as usize;
 

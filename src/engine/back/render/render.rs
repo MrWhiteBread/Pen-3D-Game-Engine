@@ -16,8 +16,8 @@ impl Render {
         }
     }
 
-    pub fn create_scene(&mut self, chunks_size: f32) -> Scene {
-        Scene::new(self.staging_buffers_example.clone(), chunks_size)
+    pub fn create_scene(&mut self, chunks_size: u32) -> Scene {
+        Scene::new(self.staging_buffers_example.clone(), chunks_size as f32)
     }
 
     pub fn update_camera(&mut self) {

@@ -32,7 +32,7 @@ fn compute_main(@builtin(global_invocation_id) id: vec3<u32>) {
 
     var obj = objects[idx];
 
-    if (!frustum_culling(obj)) {
+    if (!frustum_culling(obj) || obj.index_count == 0) {
         return;
     }
     let slot = atomicAdd(&out_counter, 1);
@@ -47,7 +47,7 @@ fn compute_main(@builtin(global_invocation_id) id: vec3<u32>) {
     objects[idx] = obj;
 
     out_commands[slot].index_count = obj.index_count;
-    out_commands[slot].instance_count = 1;
+    out_commands[slot].instance_count = 1; //TODO: move to real instancing by having a buffer for object indices
     out_commands[slot].first_index = obj.first_index;
     out_commands[slot].base_vertex = obj.base_vertex;
     out_commands[slot].first_instance = idx;

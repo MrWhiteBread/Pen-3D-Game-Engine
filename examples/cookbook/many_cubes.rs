@@ -29,7 +29,7 @@ impl Game {
 
         let camera = Camera::new(&[0.0; 3]); // create a camera with position
 
-        let mut scene = render.create_scene(45.0); // create a scene with chunks size
+        let mut scene = render.create_scene(8); // create a scene with chunks size
         scene.set_camera(&camera); // set scene camera
         scene.set_scene_light(0.12, false); // set scene global light value, and disable lerp/interpolation for this change
 
@@ -106,6 +106,7 @@ impl Game {
             println!("TPS: {}", update_var.tps);
 
             let usage = self.scene.get_usage();
+            println!("chunks len: {}", usage.chunks_len);
             println!("indices len/size: {} / {}", usage.indices_len, usage.indices_size);
             println!("vertices len/size: {} / {}", usage.vertices_len, usage.vertices_size);
             println!("objects len/size: {} / {}", usage.objects_len, usage.objects_size);
@@ -188,7 +189,7 @@ impl Game {
         // A default god is just a normal one that you can access without an id
 
         self.scene.set_default_god_pos(&god_pos); // sets default god position to "god_pos"
-        self.scene.set_default_god_dist(45.0); // sets default god distance
+        self.scene.set_default_god_dist(45); // sets default god distance
     }
 
     fn move_along_rotation(speed: &f32, rotation: &Quat, pos: &mut [f32; 3], direction: glam::Vec3) {

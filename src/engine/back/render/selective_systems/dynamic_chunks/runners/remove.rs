@@ -9,18 +9,14 @@ impl DynamicChunks {
     pub fn iter_remove_chunks<F>(&mut self, visible_chunks: &IndexSet<u32>, mut f: F) where F: FnMut(&mut LID, &mut Data, &mut Chunk) {
         let to_remove = self.lid.chunks.difference(visible_chunks).cloned().collect::<Vec<_>>();
 
-        for id in &to_remove {
-            let chunks = self.ids.get(id).expect("chunks not found");
+        for chunk_id in &to_remove {
+            let chunk = self.chunks.get_mut(chunk_id).expect("chunk not found");
 
-            for chunk_id in chunks.iter() {
-                let chunk = self.chunks.get_mut(chunk_id).expect("chunk not found");
+            if chunk.loaded {
+                chunk.loaded = false;
+                self.lid.chunks.swap_remove(chunk_id);
 
-                if chunk.loaded {
-                    chunk.loaded = false;
-                    self.lid.chunks.swap_remove(chunk_id);
-
-                    f(&mut self.lid, &mut self.data, chunk);
-                }
+                f(&mut self.lid, &mut self.data, chunk);
             }
         }
     }

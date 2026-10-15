@@ -176,11 +176,11 @@ impl Scene {
         self.scene.borrow_mut().default_god = id;
     }
 
-    pub fn set_default_god_dist(&mut self, dist: f32) {
+    pub fn set_default_god_dist(&mut self, dist: u32) {
         let default_god = self.scene.borrow().default_god.clone();
-        self.scene.borrow_mut().selective_system.set_god_dist(default_god, dist);
+        self.scene.borrow_mut().selective_system.set_god_dist(default_god, dist as f32);
         
-        self.scene.borrow_mut().default_god_values[3] = dist;
+        self.scene.borrow_mut().default_god_values[3] = dist as f32;
     }
 
     pub fn set_default_god_pos(&mut self, pos: &[f32; 3]) {
