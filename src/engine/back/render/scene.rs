@@ -228,6 +228,10 @@ impl Scene {
         self.scene.borrow_mut().selective_system.set_object_mesh(id, mesh_ids);
     }
 
+    pub fn remove_object_mesh(&mut self, id: u32) {
+        self.scene.borrow_mut().selective_system.remove_object_mesh(id);
+    }
+
     pub fn update_staging_buffers(&mut self) {
         let mut scene = self.scene.borrow_mut();
         scene.setup_staging_buffers();

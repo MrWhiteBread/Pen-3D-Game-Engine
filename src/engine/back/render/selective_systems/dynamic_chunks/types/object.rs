@@ -137,7 +137,7 @@ impl DynamicChunks {
         let vec = self.data.objects.payload.get_mut(&id).expect("object not found");
         let mesh_ids = [
             vec[0][0],
-            vec[0][1],
+            vec[1][0],
         ];
 
         vec[0] = Vec::new();

@@ -104,9 +104,15 @@ impl Mesh {
     pub fn unload(&mut self) {
         if let Some(scene) = self.scene.as_mut() && self.vertices.is_none() {
             let (vertices, indices) = scene.remove_mesh(&self.ids);
+
             self.vertices = Some(vertices);
             self.indices = Some(indices);
-            //TODO: so basically if i unload this i have to remove the vec with the ids for the mesh in the selective system in the object data
+
+            unsafe {
+                for model in self.loaded_models.values() {
+                    scene.remove_object_mesh((**model).get_id());
+                }
+            }
         } else {
             panic!("Mesh is already unloaded");
         }
