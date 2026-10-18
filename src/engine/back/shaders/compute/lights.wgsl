@@ -1,4 +1,4 @@
-@group(0) @binding(0) var<storage, read_write> counter: atomic<u32>;
+@group(0) @binding(0) var<storage, read_write> out_counter: atomic<u32>;
 @group(0) @binding(1) var<storage, read_write> light_ids: array<u32>;
 
 @group(0) @binding(2)
@@ -13,29 +13,58 @@ var<storage, read_write> lights: array<Light>;
 @group(0) @binding(5)
 var<uniform> light_count: u32;
 
+var<workgroup> counter: atomic<u32>;
+var<workgroup> index: u32;
+
 @compute @workgroup_size(64, 1, 1)
-fn compute_main(@builtin(global_invocation_id) id: vec3<u32>) {
+fn compute_main(@builtin(local_invocation_id) local_id: vec3<u32>, @builtin(global_invocation_id) id: vec3<u32>) {
     let idx = id.x;
 
-    if (idx >= light_count) {
-        return;
+    if local_id.x == 0 {
+        atomicStore(&counter, 0);
     }
 
-    var light = lights[idx];
+    workgroupBarrier();
 
-    if (!frustum_culling(light)) {
-        return;
+    var valid = false;
+    var light: Light;
+
+    if idx < light_count {
+        light = lights[idx];
+
+        if frustum_culling(light) {
+            valid = true;
+        }
     }
-    let slot = atomicAdd(&counter, 1);
 
-    light.lerp_position = mix(light.old_position, light.position, globals.t);
-    light.lerp_rotation = mix(light.old_rotation, light.rotation, globals.t);
-    light.lerp_color = mix(light.old_color, light.color, globals.t);
-    light.lerp_attributes = mix(light.old_attributes, light.attributes, globals.t);
+    var local_slot = 0u;
+    if valid {
+        local_slot = atomicAdd(&counter, 1);
+    }
 
-    lights[idx] = light;
+    workgroupBarrier();
 
-    light_ids[slot] = idx;
+    if local_id.x == 0 {
+        let ctr = atomicLoad(&counter);
+
+        if ctr > 0 {
+            index = atomicAdd(&out_counter, ctr);
+        }
+    }
+
+    workgroupBarrier();
+
+    if valid {
+        light.lerp_position = mix(light.old_position, light.position, globals.t);
+        light.lerp_rotation = mix(light.old_rotation, light.rotation, globals.t);
+        light.lerp_color = mix(light.old_color, light.color, globals.t);
+        light.lerp_attributes = mix(light.old_attributes, light.attributes, globals.t);
+
+        lights[idx] = light;
+
+        let slot = index + local_slot;
+        light_ids[slot] = idx;
+    }
 }
 
 fn frustum_culling(light: Light) -> bool

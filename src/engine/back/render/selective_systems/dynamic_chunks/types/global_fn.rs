@@ -9,7 +9,6 @@ impl DynamicChunks {
             object.old_rot = object.rot;
             object.old_size = object.size;
             object.old_color = object.color;
-            object.old_material = object.material;
         });
 
         Self::updating(&mut self.data.updater.lights, &mut self.data.lights, &mut self.lid.lights, |light| {
@@ -20,7 +19,7 @@ impl DynamicChunks {
         });
     }
 
-    fn updating_plus<F, T>(updater: &mut HashSet<u32>, data: &mut DataRegistryPlus<T,>, lid: &mut LidRegistry<T>, mut f: F) where F: FnMut(&mut T) {
+    fn updating_plus<F, T, const N: usize>(updater: &mut HashSet<u32>, data: &mut DataRegistryPlus<T, N>, lid: &mut LidRegistry<T>, mut f: F) where F: FnMut(&mut T) {
         for i in updater.drain() {
             let option = &mut data.type_.get_mut(&i).expect("no no?");
 
@@ -50,7 +49,7 @@ impl DynamicChunks {
         }
     }
 
-    pub fn get_type_plus<T>(id: u32, data: &DataRegistryPlus<T>, lid: &LidRegistry<T>) -> *const T {
+    pub fn get_type_plus<T, const N: usize>(id: u32, data: &DataRegistryPlus<T, N>, lid: &LidRegistry<T>) -> *const T {
         let t;
         let option = &data.type_.get(&id).expect("type not found, you are useless if you somehow got this error, CRY");
 
@@ -80,7 +79,7 @@ impl DynamicChunks {
         t as *const T
     }
 
-    pub fn get_mut_type_plus<T>(id: u32, data: &mut DataRegistryPlus<T>, lid: &mut LidRegistry<T>) -> *mut T {
+    pub fn get_mut_type_plus<T, const N: usize>(id: u32, data: &mut DataRegistryPlus<T, N>, lid: &mut LidRegistry<T>) -> *mut T {
         let t;
         let option = &mut data.type_.get_mut(&id).expect("type not found, you are useless if you somehow got this error, CRY");
 

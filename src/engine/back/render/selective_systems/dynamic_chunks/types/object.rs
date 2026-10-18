@@ -2,31 +2,31 @@ use kiddo::SquaredEuclidean;
 use crate::engine::back::render::selective_systems::dynamic_chunks::data::{Chunk, Data, LID};
 use crate::engine::back::render::selective_systems::dynamic_chunks::DynamicChunks;
 use crate::engine::back::render::selective_systems::dynamic_chunks::registry::{DataRegistryArray, LidRegistryArray};
-use crate::engine::back::types::object::Object;
+use crate::engine::back::types::object::raw_object::Object;
 use crate::engine::back::types::vertex::Vertex;
 
 #[allow(dead_code)]
 impl DynamicChunks {
-    pub(crate) fn remove_object_data(
+    pub(crate) fn remove_object_data<const N: usize>(
         object: &mut Object,
-        payload: &Vec<Vec<u32>>,
+        payload: &[Option<u32>; N],
         data_v: &mut DataRegistryArray<Vertex>, data_i: &mut DataRegistryArray<u32>,
         lid_v: &mut LidRegistryArray<Vertex>, lid_i: &mut LidRegistryArray<u32>,) {
 
-        object.status = 0;
+        object.color &= 0x00_FF_FF_FF;
 
-        if let Some(vertices_id) = payload[0].get(0) {
+        if let Some(vertices_id) = payload[0] {
             Self::remove_data_array(
-                *vertices_id,
+                vertices_id,
                 data_v,
                 lid_v,
                 &mut |_| {}
             );
         }
 
-        if let Some(indices_id) = payload[1].get(0) {
+        if let Some(indices_id) = payload[1] {
             Self::remove_data_array(
-                *indices_id,
+                indices_id,
                 data_i,
                 lid_i,
                 &mut |_| {}
@@ -34,15 +34,15 @@ impl DynamicChunks {
         }
     }
 
-    pub(crate) fn add_object_data(
+    pub(crate) fn add_object_data<const N: usize>(
         object: &mut Object,
-        payload: &Vec<Vec<u32>>,
+        payload: &[Option<u32>; N],
         data_v: &mut DataRegistryArray<Vertex>, data_i: &mut DataRegistryArray<u32>,
         lid_v: &mut LidRegistryArray<Vertex>, lid_i: &mut LidRegistryArray<u32>,) {
 
-        if let Some(vertices_id) = payload[0].get(0) {
+        if let Some(vertices_id) = payload[0] {
             Self::add_data_array(
-                *vertices_id,
+                vertices_id,
                 data_v,
                 lid_v,
             );
@@ -51,9 +51,9 @@ impl DynamicChunks {
             object.base_vertex = ver[0] as i32;
         }
 
-        if let Some(indices_id) = payload[1].get(0) {
+        if let Some(indices_id) = payload[1] {
             Self::add_data_array(
-                *indices_id,
+                indices_id,
                 data_i,
                 lid_i,
             );
@@ -110,7 +110,7 @@ impl DynamicChunks {
         self.data.objects.type_.insert(id, Some(object));
         self.data.objects.chunk.insert(id, chunk_id);
         self.data.objects.type_i.insert(id, 0);
-        self.data.objects.payload.insert(id, Vec::from([Vec::new(), Vec::new()]));
+        self.data.objects.payload.insert(id, [None, None]);
 
         id
     }
@@ -127,7 +127,7 @@ impl DynamicChunks {
         self.data.objects.type_i.insert(id, index);
         self.data.objects.chunk.insert(id, chunk_id);
         self.data.objects.i_type.insert(index, id);
-        self.data.objects.payload.insert(id, Vec::from([Vec::new(), Vec::new()]));
+        self.data.objects.payload.insert(id, [None, None]);
         chunk.objects.insert(id);
 
         id
@@ -136,12 +136,12 @@ impl DynamicChunks {
     pub fn remove_object_mesh(&mut self, id: u32) {
         let vec = self.data.objects.payload.get_mut(&id).expect("object not found");
         let mesh_ids = [
-            vec[0][0],
-            vec[1][0],
+            vec[0].expect("no mesh vertex id"),
+            vec[1].expect("no mesh index id"),
         ];
 
-        vec[0] = Vec::new();
-        vec[1] = Vec::new();
+        vec[0] = None;
+        vec[1] = None;
 
         if self.data.objects.type_.get(&id).expect("type not found").is_none() {
             Self::remove_data_array(
@@ -175,8 +175,8 @@ impl DynamicChunks {
 
     pub fn set_object_mesh(&mut self, id: u32, mesh_ids: &[u32; 2]) {
         let vec = self.data.objects.payload.get_mut(&id).expect("object not found");
-        vec[0] = Vec::from([mesh_ids[0]]);
-        vec[1] = Vec::from([mesh_ids[1]]);
+        vec[0] = Some(mesh_ids[0]);
+        vec[1] = Some(mesh_ids[1]);
 
         if self.data.objects.type_.get(&id).expect("type not found").is_none() {
             Self::add_data_array(

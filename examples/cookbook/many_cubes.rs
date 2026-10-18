@@ -2,7 +2,7 @@ use glam::Quat;
 use winit::keyboard::{KeyCode, PhysicalKey};
 use crate::engine::back::render::render::Render;
 use crate::engine::back::render::scene::Scene;
-use crate::engine::back::types::object::Object;
+use crate::engine::back::types::object::raw_object::Object;
 use crate::engine::front::components::camera::Camera;
 use crate::engine::front::components::light::Light;
 use crate::engine::front::components::materials::{METAL};
@@ -40,7 +40,7 @@ impl Game {
         mesh.load(&scene); // load the mesh
 
         // create an object using: center, rotation, size, color and material
-        let object = Object::new( &[5.0, 0.0, 5.0], &[0.0, 0.0, 0.0], &[10.0, 1.0, 10.0], &[1.0, 0.1, 0.1, 1.0], &METAL);
+        let object = Object::new( &[5.0, 0.0, 5.0], &[0.0, 0.0, 0.0], &[10.0, 1.0, 10.0], [255, 6, 8], &METAL);
         let mut model = Model::from(object, &mut mesh); // create a Model using an Object and a &mut Mesh
         model.load(&scene); // load the Model
 
@@ -51,7 +51,7 @@ impl Game {
         let mut mesh = cuboid(&[8.0, 2.0, 2.0]);
         mesh.load(&scene);
 
-        let object = Object::new(&[0.0, 10.0, 0.0], &[0.0, 0.0, 0.0], &[1.0, 1.0, 1.0], &[0.0, 0.9, 0.1, 1.0], &METAL);
+        let object = Object::new(&[0.0, 10.0, 0.0], &[0.0, 0.0, 0.0], &[1.0, 1.0, 1.0], [0, 240, 30], &METAL);
         let mut model = Model::from(object, &mut mesh);
         model.load(&scene);
 
@@ -67,7 +67,7 @@ impl Game {
                 for k in 0..10 {
                     // places a model in a grid of 80 by 80 by 10, and uses the same mesh for every object
 
-                    let object = Object::new(&[i as f32 * 2.0, k as f32 * -2.0, j as f32 * 2.0], &[0.0, 0.0, 0.0], &[1.0, 1.0, 1.0], &[0.1, 1.0, 0.2, 1.0], &METAL);
+                    let object = Object::new(&[i as f32 * 2.0, k as f32 * -2.0, j as f32 * 2.0], &[0.0, 0.0, 0.0], &[1.0, 1.0, 1.0], [20, 245, 50], &METAL);
 
                     let mut model = Model::new(object); // creates a model without a mesh
                     model.load(&scene);

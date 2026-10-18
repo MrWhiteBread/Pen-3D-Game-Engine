@@ -1,11 +1,12 @@
 use std::io::Read;
+use half::f16;
 use indexmap::IndexMap;
 use crate::engine::back::types::vertex::Vertex;
 use crate::engine::front::components::mesh::Mesh;
 
 #[allow(dead_code)]
-pub fn import_obj(path: &str) -> IndexMap<u32, Mesh> {
-    let mut meshes: IndexMap<u32, Mesh> = IndexMap::new();
+pub fn import_mesh(path: &str) -> Vec<Mesh> {
+    let mut meshes: Vec<Mesh> = Vec::new();
 
     let mut vertices: Vec<Vertex> = Vec::new();
     let mut indices: Vec<u32> = Vec::new();
@@ -16,8 +17,6 @@ pub fn import_obj(path: &str) -> IndexMap<u32, Mesh> {
     let mut index_offset = 0;
     let mut normal_offset = 0;
     let mut uvs_offset = 0;
-
-    let mut counter = 0;
 
     let mut file = std::fs::File::open(path).expect("file not found");
     let mut contents = String::new();
@@ -30,16 +29,15 @@ pub fn import_obj(path: &str) -> IndexMap<u32, Mesh> {
         if words.len() >= 1 {
             match words[0] {
                 "o" => {
-                    println ! ("Found object: {}", words[1]);
-
                     if vertices.len() > 0 {
+                        println ! ("Found object: {}, with vertices len: {}", words[1], vertices.len());
+
                         index_offset += vertices.len();
                         normal_offset += normals.len();
                         uvs_offset += uvs.len();
 
                         let mesh = Mesh::new(vertices, indices, radius);
-                        meshes.insert(counter, mesh);
-                        counter += 1;
+                        meshes.push(mesh);
 
                         vertices = Vec::new();
                         indices = Vec::new();
@@ -57,12 +55,8 @@ pub fn import_obj(path: &str) -> IndexMap<u32, Mesh> {
 
                     let vertex = Vertex {
                         position,
-                        old_position: position,
-                        normal: [0.0, 0.0, 0.0],
-                        old_normal: [0.0, 0.0, 0.0],
-                        uv: [0.0, 0.0], 
-                        old_uv: [0.0, 0.0],
-                        skeleton: 0,
+                        normal: 0,
+                        uv: [f16::ZERO; 2],
                     };
 
                     let new_radius = (position[0].powi(2) + position[1].powi(2) + position[2].powi(2)).sqrt();
@@ -110,13 +104,11 @@ pub fn import_obj(path: &str) -> IndexMap<u32, Mesh> {
 
 
                         ind.push(vertex_index as u32);
-                        vertices[vertex_index].normal = normals[normal_index];
-                        vertices[vertex_index].old_normal = normals[normal_index];
-                        vertices[vertex_index].uv = uvs[uv_index];
-                        vertices[vertex_index].old_uv = uvs[uv_index];
+                        vertices[vertex_index].normal = normals_to_u32(normals[normal_index]);
+                        vertices[vertex_index].uv = [f16::from_f32(uvs[uv_index][0]), f16::from_f32(uvs[uv_index][1])];
                     }
 
-                    indices.extend(triangulate(&ind));
+                    indices.extend(&ind); //works only for triangulated meshes so yeah i gotta update this
                 }
 
                 _ => {}
@@ -124,10 +116,19 @@ pub fn import_obj(path: &str) -> IndexMap<u32, Mesh> {
         }
     }
 
+    println!("Found an object, with vertices len: {}", vertices.len());
     let mesh = Mesh::new(vertices, indices, radius);
-    meshes.insert(counter, mesh);
+    meshes.push(mesh);
 
     meshes
+}
+
+pub fn normals_to_u32(array: [f32; 3]) -> u32 {
+    let x = ((array[0] * 0.5 + 0.5) * 1023.0).round() as u32;
+    let y = (((array[1] * 0.5 + 0.5) * 1023.0).round() as u32) << 10;
+    let z = (((array[2] * 0.5 + 0.5) * 1023.0).round() as u32) << 20;
+
+    x | y | z
 }
 
 #[allow(dead_code)]

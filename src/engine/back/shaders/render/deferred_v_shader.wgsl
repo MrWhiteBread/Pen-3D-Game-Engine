@@ -18,7 +18,8 @@ fn fs_main(in: VertexOutput) -> GBufferOutput {
     var output: GBufferOutput;
 
     output.data = vec4<f32>(in.world_normal.xy, in.material);
-    output.color = vec4<f32>(in.color.rgb, f32 (in.texture_id) + 0.1 * select(0.0, 1.0, in.world_normal.z >= 0));
+    output.color = vec4<f32>(in.color.rgb, f32 (in.id) + 0.1 * select(0.0, 1.0, in.world_normal.z >= 0));
     output.uv = in.uv;
+
     return output;
 }

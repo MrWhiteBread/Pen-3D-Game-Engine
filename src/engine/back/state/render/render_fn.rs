@@ -121,7 +121,6 @@ impl<'a> State<'a> {
             });
 
             render_pass_3d.set_bind_group(0, &self.pipelines.per_pixel_forward_pass.bind_group, &[]);
-            render_pass_3d.set_bind_group(1, &self.pipelines.per_pixel_forward_pass.screen_bind_group, &[]);
             render_pass_3d.set_pipeline(&self.pipelines.per_pixel_forward_pass.pipeline);
 
             render_pass_3d.set_vertex_buffer(0, self.black_vertices_buffer.slice(..));
@@ -160,7 +159,6 @@ impl<'a> State<'a> {
             });
 
             render_pass_3d.set_bind_group(0, &self.pipelines.forward_pass.bind_group, &[]);
-            render_pass_3d.set_bind_group(1, &self.pipelines.forward_pass.screen_bind_group, &[]);
             render_pass_3d.set_pipeline(&self.pipelines.forward_pass.pipeline);
 
             render_pass_3d.set_vertex_buffer(0, self.buffers.vertices_buffer.slice(..));

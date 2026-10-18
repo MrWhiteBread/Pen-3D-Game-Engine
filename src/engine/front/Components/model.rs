@@ -3,12 +3,10 @@ mod set;
 mod add;
 mod global;
 
-use std::cell::RefCell;
 use std::ptr::null_mut;
-use std::rc::Rc;
 use glam::{EulerRot, Quat};
 use crate::engine::back::render::scene::Scene;
-use crate::engine::back::types::object::Object;
+use crate::engine::back::types::object::raw_object::Object;
 use crate::engine::front::components::mesh::Mesh;
 
 type Id = u32;

@@ -41,15 +41,15 @@ impl DynamicChunks {
     }
 
 
-    pub fn iter_add_data_plus<F, T>(chunk_type: &mut HashSet<u32>, data: &mut DataRegistryPlus<T>, lid: &mut LidRegistry<T>, f: &mut F)
-    where F: FnMut(&mut T, &Vec<Vec<u32>>) {
+    pub fn iter_add_data_plus<F, T, const N: usize>(chunk_type: &mut HashSet<u32>, data: &mut DataRegistryPlus<T, N>, lid: &mut LidRegistry<T>, f: &mut F)
+    where F: FnMut(&mut T, &[Option<u32>; N]) {
         for type_id in chunk_type.iter() {
             Self::add_data_plus(*type_id, data, lid, f);
         }
     }
 
-    pub fn add_data_plus<F, T>(type_id: u32, data: &mut DataRegistryPlus<T>, lid: &mut LidRegistry<T>, f: &mut F) 
-    where F: FnMut(&mut T, &Vec<Vec<u32>>) {
+    pub fn add_data_plus<F, T, const N: usize>(type_id: u32, data: &mut DataRegistryPlus<T, N>, lid: &mut LidRegistry<T>, f: &mut F) 
+    where F: FnMut(&mut T, &[Option<u32>; N]) {
         let data_ = data.type_.get_mut(&type_id).expect("no type found");
         let mut type_ = data_.take().expect("no type found in option");
         let payload = data.payload.get(&type_id).expect("no payload found");

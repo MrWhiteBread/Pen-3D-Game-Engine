@@ -49,17 +49,17 @@ impl<T> DataRegistry<T> {
     }
 }
 
-pub struct DataRegistryPlus<T> {
+pub struct DataRegistryPlus<T, const N: usize> {
     pub type_: HashMap<Id, Option<T>>,
     pub chunk: HashMap<Id, ChunkId>,
     pub type_i: HashMap<Id, Index>,
     pub i_type: HashMap<Index, Id>,
-    pub payload: HashMap<Id, Vec<Vec<u32>>>,
+    pub payload: HashMap<Id, [Option<u32>; N]>,
 
     pub ids: Id32,
 }
 
-impl<T> DataRegistryPlus<T> {
+impl<T, const N: usize> DataRegistryPlus<T, N> {
     pub fn new() -> Self {
         Self {
             type_: HashMap::new(),

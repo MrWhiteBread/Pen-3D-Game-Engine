@@ -43,15 +43,15 @@ impl DynamicChunks {
     }
     
 
-    pub fn iter_remove_data_plus<F, T: Clone>(chunk_type: &mut HashSet<u32>, data: &mut DataRegistryPlus<T>, lid: &mut LidRegistry<T>, f: &mut F)
-    where F: FnMut(&mut T, &Vec<Vec<u32>>) {
+    pub fn iter_remove_data_plus<F, T: Clone, const N: usize>(chunk_type: &mut HashSet<u32>, data: &mut DataRegistryPlus<T, N>, lid: &mut LidRegistry<T>, f: &mut F)
+    where F: FnMut(&mut T, &[Option<u32>; N]) {
         for type_id in chunk_type.iter() {
             Self::remove_data_plus(*type_id, data, lid, f);
         }
     }
 
-    pub fn remove_data_plus<F, T: Clone>(type_id: u32, data: &mut DataRegistryPlus<T>, lid: &mut LidRegistry<T>, f: &mut F)
-    where F: FnMut(&mut T, &Vec<Vec<u32>>) {
+    pub fn remove_data_plus<F, T: Clone, const N: usize>(type_id: u32, data: &mut DataRegistryPlus<T, N>, lid: &mut LidRegistry<T>, f: &mut F)
+    where F: FnMut(&mut T, &[Option<u32>; N]) {
         let type_ = data.type_.get_mut(&type_id).expect("type not found");
         let type_i = data.type_i.get(&type_id).expect("type id not found");
         let payload = data.payload.get(&type_id).expect("payload not found");
@@ -105,15 +105,15 @@ impl DynamicChunks {
     
     
 
-    pub fn iter_swap_remove_data_plus<F, T: Clone>(chunk_type: &mut HashSet<u32>, data: &mut DataRegistryPlus<T>, lid: &mut LidRegistry<T>, f: &mut F)
-    where F: FnMut(&mut T, &Vec<Vec<u32>>) {
+    pub fn iter_swap_remove_data_plus<F, T: Clone, const N: usize>(chunk_type: &mut HashSet<u32>, data: &mut DataRegistryPlus<T, N>, lid: &mut LidRegistry<T>, f: &mut F)
+    where F: FnMut(&mut T, &[Option<u32>; N]) {
         for type_id in chunk_type.iter() {
             Self::swap_remove_data_plus(*type_id, data, lid, f);
         }
     }
 
-    pub fn swap_remove_data_plus<F, T: Clone>(type_id: u32, data: &mut DataRegistryPlus<T>, lid: &mut LidRegistry<T>, f: &mut F)
-    where F: FnMut(&mut T, &Vec<Vec<u32>>) {
+    pub fn swap_remove_data_plus<F, T: Clone, const N: usize>(type_id: u32, data: &mut DataRegistryPlus<T, N>, lid: &mut LidRegistry<T>, f: &mut F)
+    where F: FnMut(&mut T, &[Option<u32>; N]) {
         let type_ = data.type_.get_mut(&type_id).expect("type not found");
         let type_i = data.type_i.get(&type_id).expect("type id not found").clone();
         let payload = data.payload.get(&type_id).expect("no payload not found");

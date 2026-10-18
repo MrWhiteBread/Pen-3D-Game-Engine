@@ -9,7 +9,8 @@ use crate::engine::back::types::camera::{CameraUniform, Plane};
 use crate::engine::back::types::draw_indexed_indirect_args::DrawIndexedIndirectArgs;
 use crate::engine::back::types::globals::Globals;
 use crate::engine::back::types::light::LightType;
-use crate::engine::back::types::object::Object;
+use crate::engine::back::types::object;
+use crate::engine::back::types::object::raw_object::Object;
 use crate::engine::back::types::vertex::Vertex;
 use crate::engine::front::components::camera::Camera;
 use crate::engine::front::components::light::Light;
@@ -24,6 +25,7 @@ pub struct Buffers {
     pub camera_buffer: Buffer,
 
     pub object_buffer: Buffer,
+    pub raw_object_buffer: Buffer,
     pub object_count_buffer: Buffer,
     
     pub light_buffer: Buffer,
@@ -42,21 +44,15 @@ impl Buffers {
     #[allow(unused_variables)]
     pub fn new(device: &Device, info: &AdapterInfo, queue: Arc<Queue>, color_texture_view: TextureView, color_texture_size: Extent3d)-> (Self, StagingBuffers) {
         //TODO: make buffers dynamic, until then i will limit
-        let max_objects = 300_000;
-        let max_diff_objects = 500_000;
-        let max_diff_object_ids = 500_000;
-
-        let max_vertices = 1_000_000;
+        let max_lights = 1_000;
+        let max_objects = 200_000;
+        let max_vertices = 5_000_000;
         let max_indices = 10_000_000;
-
-        let max_lights = 10_000;
-
+        
         let max_bones = 1;
 
         let mut vram_usage = 16 + size_of::<Globals>();
-        vram_usage += max_objects * size_of::<Object>() * 2;
-        vram_usage += max_diff_objects * size_of::<DrawIndexedIndirectArgs>();
-        vram_usage += max_diff_object_ids * 4;
+        vram_usage += max_objects * (size_of::<Object>() * 2 + size_of::<DrawIndexedIndirectArgs>() + 4);
 
         vram_usage += max_vertices * size_of::<Vertex>() * 2;
         vram_usage += max_indices * 16;
@@ -70,7 +66,7 @@ impl Buffers {
 
         let command_buffer = device.create_buffer(&BufferDescriptor {
             label: Some("GPU Draw commands array"),
-            size: (size_of::<DrawIndexedIndirectArgs>() * max_diff_objects) as u64,
+            size: (size_of::<DrawIndexedIndirectArgs>() * max_objects) as u64,
             usage: BufferUsages::INDIRECT | BufferUsages::STORAGE,
             mapped_at_creation: false,
         });
@@ -84,7 +80,7 @@ impl Buffers {
 
         let object_ids_buffer = device.create_buffer(&BufferDescriptor {
             label: Some("Object ID buffer"),
-            size: 4 * max_diff_object_ids as u64,
+            size: 4 * max_objects as u64,
             usage: BufferUsages::STORAGE | BufferUsages::VERTEX,
             mapped_at_creation: false,
         });
@@ -162,6 +158,13 @@ impl Buffers {
 
         let object_buffer = device.create_buffer(&BufferDescriptor {
             label: Some("Object buffer"),
+            size: (size_of::<object::object::Object>() * max_objects) as BufferAddress,
+            usage: BufferUsages::STORAGE,
+            mapped_at_creation: false,
+        });
+
+        let raw_object_buffer = device.create_buffer(&BufferDescriptor {
+            label: Some("Raw object buffer"),
             size: (size_of::<Object>() * max_objects) as BufferAddress,
             usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
             mapped_at_creation: false,
@@ -275,7 +278,9 @@ impl Buffers {
 
                 globals: globals_buffer,
                 camera_buffer,
+
                 object_buffer,
+                raw_object_buffer,
                 object_count_buffer,
 
                 light_buffer,

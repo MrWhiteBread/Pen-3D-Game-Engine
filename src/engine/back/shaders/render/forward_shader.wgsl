@@ -16,9 +16,6 @@ var<storage, read> light_counter: u32;
 @group(0) @binding(5)
 var<storage, read> light_ids: array<u32>;
 
-@group(1) @binding(0)
-var rays_texture: texture_storage_2d<rgba16float, write>;
-
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     var colour = in.color.rgb;
@@ -30,7 +27,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     vertex.world_position = in.world_position;
     vertex.material = in.material;
     vertex.uv = in.uv;
-    vertex.texture_id = in.texture_id;
+    vertex.id = in.id;
 
     return vec4<f32>(get_colour(vertex), 1.0);
 }

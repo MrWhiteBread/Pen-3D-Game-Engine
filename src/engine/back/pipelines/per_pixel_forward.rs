@@ -2,39 +2,11 @@ use wgpu::{BindGroupDescriptor, BindGroupEntry, BindGroupLayoutDescriptor, BindG
 use wgpu::TextureViewDimension::D2;
 use crate::engine::back::buffers::Buffers;
 use crate::engine::back::screen_textures::ScreenTextures;
-use crate::engine::back::pipelines::pass_state::{ScreenPassState};
+use crate::engine::back::pipelines::pass_state::{PassState, ScreenPassState, SimplePassState};
 use crate::engine::back::pipelines::Pipelines;
 use crate::engine::back::shaders::Shaders;
 
-pub fn per_pixel_forward(device: &wgpu::Device, buffers: &Buffers, config: &SurfaceConfiguration, shaders: &Shaders, screen_textures: &ScreenTextures) -> ScreenPassState {
-    let screen_bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-        label: Some("Per pixel screen forward bind group layout"),
-        entries: &[
-            BindGroupLayoutEntry {
-                binding: 0,
-                visibility: ShaderStages::FRAGMENT,
-                ty: BindingType::StorageTexture {
-                    access: wgpu::StorageTextureAccess::WriteOnly,
-                    format: TextureFormat::Rgba16Float,
-                    view_dimension: D2,
-                },
-                count: None,
-            },
-        ],
-    });
-
-    let screen_bind_group = device.create_bind_group(&BindGroupDescriptor {
-        layout: &screen_bind_group_layout,
-        entries: &[
-            BindGroupEntry {
-                binding: 0,
-                resource: BindingResource::TextureView(&screen_textures.light_rays_view),
-            },
-        ],
-        label: Some("Per pixel screen forward bind group"),
-    });
-
-
+pub fn per_pixel_forward(device: &wgpu::Device, buffers: &Buffers, config: &SurfaceConfiguration, shaders: &Shaders) -> PassState {
     let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
         label: Some("Per pixel forward bind group layout"),
         entries: &[
@@ -126,7 +98,7 @@ pub fn per_pixel_forward(device: &wgpu::Device, buffers: &Buffers, config: &Surf
 
     let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
         label: Some("Per pixel forward pipeline layout"),
-        bind_group_layouts: &[Some(&bind_group_layout), Some(&screen_bind_group_layout)],
+        bind_group_layouts: &[Some(&bind_group_layout)],
         immediate_size: 0,
     });
 
@@ -168,28 +140,10 @@ pub fn per_pixel_forward(device: &wgpu::Device, buffers: &Buffers, config: &Surf
         cache: None,
     });
 
-    ScreenPassState {
+    PassState{
         bind_group,
         bind_group_layout,
 
-        screen_bind_group,
-        screen_bind_group_layout,
-
         pipeline,
-    }
-}
-
-impl Pipelines {
-    pub fn remake_pp_forward_screen_bind_group(&mut self, device: &wgpu::Device, screen_textures: &ScreenTextures) {
-        self.per_pixel_forward_pass.screen_bind_group = device.create_bind_group(&BindGroupDescriptor {
-            layout: &self.per_pixel_forward_pass.screen_bind_group_layout,
-            entries: &[
-                BindGroupEntry {
-                    binding: 0,
-                    resource: BindingResource::TextureView(&screen_textures.light_rays_view),
-                },
-            ],
-            label: Some("per pixel forward screen bind group"),
-        });
     }
 }

@@ -24,7 +24,8 @@ impl<'a> Shaders<'a> {
         let objects = concat!(
             include_str!("shaders\\structs\\globals.wgsl"), '\n',
             include_str!("shaders\\structs\\camera.wgsl"), '\n',
-            include_str!("shaders\\structs\\object.wgsl"), '\n',
+            include_str!("shaders\\structs\\object\\raw_object.wgsl"), '\n',
+            include_str!("shaders\\structs\\object\\object.wgsl"), '\n',
 
             include_str!("shaders\\r_parts\\slerp.wgsl"), '\n',
             include_str!("shaders\\r_parts\\quad_to_mat3.wgsl"), '\n',
@@ -46,7 +47,7 @@ impl<'a> Shaders<'a> {
             include_str!("shaders\\structs\\vertex_output.wgsl"), '\n',
             include_str!("shaders\\structs\\globals.wgsl"), '\n',
             include_str!("shaders\\structs\\camera.wgsl"), '\n',
-            include_str!("shaders\\structs\\object.wgsl"), '\n',
+            include_str!("shaders\\structs\\object\\object.wgsl"), '\n',
             include_str!("shaders\\structs\\light.wgsl"), '\n',
         
             include_str!("shaders\\r_parts\\light.wgsl"), '\n',
@@ -71,7 +72,7 @@ impl<'a> Shaders<'a> {
             include_str!("shaders\\structs\\vertex_output.wgsl"), '\n',
             include_str!("shaders\\structs\\globals.wgsl"), '\n',
             include_str!("shaders\\structs\\camera.wgsl"), '\n',
-            include_str!("shaders\\structs\\object.wgsl"), '\n',
+            include_str!("shaders\\structs\\object\\object.wgsl"), '\n',
 
             include_str!("shaders\\render\\vs_main.wgsl"), '\n',
             include_str!("shaders\\render\\deferred_v_shader.wgsl"),

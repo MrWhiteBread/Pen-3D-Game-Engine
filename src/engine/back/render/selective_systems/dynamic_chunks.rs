@@ -34,10 +34,10 @@ pub struct DynamicChunks {
 impl DynamicChunks {
     pub fn new(chunks_size: f32) -> Self {
         let default_space = [
-            1000,
+            1_000,
             200_000,
-            1000_000,
-            1000_000,
+            5_000_000,
+            10_000_000,
         ];
 
         let atlas_pixel_size = 8192;

@@ -51,16 +51,6 @@ pub fn deferred_f(device: &wgpu::Device, buffers: &Buffers, config: &SurfaceConf
                 },
                 count: None,
             },
-            BindGroupLayoutEntry {
-                binding: 4,
-                visibility: ShaderStages::FRAGMENT,
-                ty: BindingType::StorageTexture {
-                    access: wgpu::StorageTextureAccess::WriteOnly,
-                    format: TextureFormat::Rgba16Float,
-                    view_dimension: D2,
-                },
-                count: None,
-            },
         ],
     });
 
@@ -82,10 +72,6 @@ pub fn deferred_f(device: &wgpu::Device, buffers: &Buffers, config: &SurfaceConf
             BindGroupEntry {
                 binding: 3,
                 resource: BindingResource::TextureView(&screen_textures.uv_view),
-            },
-            BindGroupEntry {
-                binding: 4,
-                resource: BindingResource::TextureView(&screen_textures.light_rays_view),
             },
         ],
         label: Some("Texture bind group"),
@@ -256,10 +242,6 @@ impl Pipelines {
                 BindGroupEntry {
                     binding: 3,
                     resource: BindingResource::TextureView(&screen_textures.uv_view),
-                },
-                BindGroupEntry {
-                    binding: 4,
-                    resource: BindingResource::TextureView(&screen_textures.light_rays_view),
                 },
             ],
             label: Some("Texture bind group"),

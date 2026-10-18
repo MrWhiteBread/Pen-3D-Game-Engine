@@ -44,7 +44,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
     let data2 = textureLoad(color_texture, pixel_coords, 0);
     let z_direction = fract(data2.a) > 0.0;
-    vertex.texture_id = u32 (floor(data2.a));
+    vertex.id = u32 (floor(data2.a));
 
     let data1 = textureLoad(data_texture, pixel_coords, 0);
     vertex.material = data1.zw;

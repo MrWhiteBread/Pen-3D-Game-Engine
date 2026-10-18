@@ -1,11 +1,6 @@
-use std::collections::HashSet;
-use kiddo::SquaredEuclidean;
-use crate::engine::back::render::selective_systems::dynamic_chunks::data::{Chunk, Data, LID};
 use crate::engine::back::render::selective_systems::dynamic_chunks::DynamicChunks;
-use crate::engine::back::render::selective_systems::dynamic_chunks::registry::{ DataRegistryArray, LidRegistryArray};
-use crate::engine::back::types::object::Object;
+use crate::engine::back::render::selective_systems::dynamic_chunks::registry::{ DataRegistryArray};
 use crate::engine::back::types::vertex::Vertex;
-use crate::engine::front::components::mesh::Mesh;
 
 #[allow(dead_code)]
 impl DynamicChunks {

@@ -7,7 +7,7 @@ edition = "2024"
 debug = true
 
 [dependencies]
-rand = "0.10.3"
+half = { version = "2.7.1", features = ["bytemuck"]}
 indexmap = "2.14.2"
 kiddo = "5.3.2"
 image = "0.25.9"

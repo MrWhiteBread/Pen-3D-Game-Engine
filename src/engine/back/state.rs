@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicBool};
 use arc_swap::access::{DynAccess, DynGuard};
 use arc_swap::ArcSwap;
 use atomic_float::{AtomicF32, AtomicF64};
-use wgpu::{Backends, Buffer, BufferDescriptor, BufferUsages, CompositeAlphaMode, CurrentSurfaceTexture, Device, DeviceDescriptor, ExperimentalFeatures, Extent3d, Features, Instance, InstanceDescriptor, Limits, MemoryHints, PowerPreference, PresentMode, Queue, RequestAdapterOptions, Surface, SurfaceColorSpace, SurfaceConfiguration, TextureFormat, TextureUsages, Trace};
+use wgpu::{Backend, Backends, Buffer, BufferDescriptor, BufferUsages, CompositeAlphaMode, CurrentSurfaceTexture, Device, DeviceDescriptor, ExperimentalFeatures, Extent3d, Features, Instance, InstanceDescriptor, Limits, MemoryHints, PowerPreference, PresentMode, Queue, RequestAdapterOptions, Surface, SurfaceColorSpace, SurfaceConfiguration, TextureFormat, TextureUsages, Trace};
 use wgpu::wgt::TextureViewDescriptor;
 use winit::dpi::PhysicalSize;
 use winit::event::{ElementState, WindowEvent};
@@ -152,13 +152,11 @@ impl<'a> State<'a> {
         self.screen_textures = ScreenTextures::new(&self.device, size.width, size.height);
 
         self.pipelines.remake_deferred_f_bind_group(&self.device, &self.screen_textures);
-        self.pipelines.remake_forward_screen_bind_group(&self.device, &self.screen_textures);
-        self.pipelines.remake_pp_forward_screen_bind_group(&self.device, &self.screen_textures);
     }
     
     pub async fn new(window: Arc<Window>, mut settings: Settings) -> (Self, Arc<ArcSwap<StagingBuffers>>) {
         let instance = Instance::new(InstanceDescriptor {
-            backends: Backends::DX12,
+            backends: Backends::PRIMARY,
             ..InstanceDescriptor::new_without_display_handle()
         });
 
@@ -172,7 +170,10 @@ impl<'a> State<'a> {
             force_fallback_adapter: false,
             apply_limit_buckets: false
         }).await.expect("Can't get adapter");
-        
+
+        println!("backend: {:?}", adapter.get_info().backend);
+        println!("device: {:?}", adapter.get_info().device_type);
+
         let device_descriptor = DeviceDescriptor {
             label: Some("My Device"),
             required_features: Features::INDIRECT_FIRST_INSTANCE | Features::MULTI_DRAW_INDIRECT_COUNT | Features::TEXTURE_BINDING_ARRAY | Features::TEXTURE_FORMAT_16BIT_NORM,

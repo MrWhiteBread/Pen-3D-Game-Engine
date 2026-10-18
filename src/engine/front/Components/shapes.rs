@@ -1,2 +1,2 @@
 pub mod cuboid;
-pub mod import_obj;
+pub mod import_mesh;

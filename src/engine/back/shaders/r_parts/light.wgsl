@@ -5,7 +5,7 @@ struct Vertex {
     world_position: vec3<f32>,
     material: vec2<f32>,
     uv: vec2<f32>,
-    texture_id: u32,
+    id: u32,
 }
 
 fn calculate_light(light: Light, in: Vertex, color: vec3<f32>) -> vec3<f32> {

@@ -1,40 +1,13 @@
 use wgpu::{BindGroupDescriptor, BindGroupEntry, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingResource, BindingType, BufferBindingType, ColorTargetState, PipelineLayoutDescriptor, RenderPipelineDescriptor, ShaderModuleDescriptor, ShaderSource, ShaderStages, SurfaceConfiguration, TextureFormat, TextureSampleType, VertexAttribute, VertexBufferLayout, VertexFormat, VertexStepMode};
 use wgpu::TextureViewDimension::D2;
 use crate::engine::back::buffers::Buffers;
-use crate::engine::back::pipelines::pass_state::{ScreenPassState};
+use crate::engine::back::pipelines::pass_state::{PassState, ScreenPassState, SimplePassState};
 use crate::engine::back::pipelines::Pipelines;
 use crate::engine::back::screen_textures::ScreenTextures;
 use crate::engine::back::shaders::Shaders;
 use crate::engine::back::types::vertex::Vertex;
 
-pub fn forward(device: &wgpu::Device, buffers: &Buffers, config: &SurfaceConfiguration, shaders: &Shaders, screen_textures: &ScreenTextures) -> ScreenPassState {
-    let screen_bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
-        label: Some("forward screen bind group layout"),
-        entries: &[
-            BindGroupLayoutEntry {
-                binding: 0,
-                visibility: ShaderStages::FRAGMENT,
-                ty: BindingType::StorageTexture {
-                    access: wgpu::StorageTextureAccess::WriteOnly,
-                    format: TextureFormat::Rgba16Float,
-                    view_dimension: D2,
-                },
-                count: None,
-            },
-        ],
-    });
-
-    let screen_bind_group = device.create_bind_group(&BindGroupDescriptor {
-        layout: &screen_bind_group_layout,
-        entries: &[
-            BindGroupEntry {
-                binding: 0,
-                resource: BindingResource::TextureView(&screen_textures.light_rays_view),
-            },
-        ],
-        label: Some("forward screen bind group"),
-    });
-    
+pub fn forward(device: &wgpu::Device, buffers: &Buffers, config: &SurfaceConfiguration, shaders: &Shaders) -> PassState {
     let bind_group_layout = device.create_bind_group_layout(&BindGroupLayoutDescriptor {
         label: Some("forward bind group layout"),
         entries: &[
@@ -139,7 +112,7 @@ pub fn forward(device: &wgpu::Device, buffers: &Buffers, config: &SurfaceConfigu
 
     let pipeline_layout = device.create_pipeline_layout(&PipelineLayoutDescriptor {
         label: Some("forward render pipeline layout"),
-        bind_group_layouts: &[Some(&bind_group_layout), Some(&screen_bind_group_layout)],
+        bind_group_layouts: &[Some(&bind_group_layout)],
         immediate_size: 0,
     });
 
@@ -157,7 +130,7 @@ pub fn forward(device: &wgpu::Device, buffers: &Buffers, config: &SurfaceConfigu
                     step_mode: VertexStepMode::Instance,
                     attributes: &[VertexAttribute {
                         offset: 0,
-                        shader_location: 6,
+                        shader_location: 3,
                         format: VertexFormat::Uint32,
                     }]
                 })
@@ -192,28 +165,10 @@ pub fn forward(device: &wgpu::Device, buffers: &Buffers, config: &SurfaceConfigu
         cache: None,
     });
 
-    ScreenPassState{
+    PassState{
         bind_group,
         bind_group_layout,
         
-        screen_bind_group,
-        screen_bind_group_layout,
-        
         pipeline,
-    }
-}
-
-impl Pipelines {
-    pub fn remake_forward_screen_bind_group(&mut self, device: &wgpu::Device, screen_textures: &ScreenTextures) {
-        self.forward_pass.screen_bind_group = device.create_bind_group(&BindGroupDescriptor {
-            layout: &self.forward_pass.screen_bind_group_layout,
-            entries: &[
-                BindGroupEntry {
-                    binding: 0,
-                    resource: BindingResource::TextureView(&screen_textures.light_rays_view),
-                },
-            ],
-            label: Some("forward screen bind group"),
-        });
     }
 }

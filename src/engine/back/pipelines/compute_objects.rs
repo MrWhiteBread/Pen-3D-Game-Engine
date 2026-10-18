@@ -61,7 +61,7 @@ pub fn compute_objects(device: &wgpu::Device, buffers: &Buffers, shaders: &Shade
                 binding: 5,
                 visibility: ShaderStages::COMPUTE,
                 ty: BindingType::Buffer {
-                    ty: BufferBindingType::Storage { read_only: false },
+                    ty: BufferBindingType::Storage { read_only: true },
                     has_dynamic_offset: false,
                     min_binding_size: None,
                 },
@@ -69,6 +69,16 @@ pub fn compute_objects(device: &wgpu::Device, buffers: &Buffers, shaders: &Shade
             },
             BindGroupLayoutEntry {
                 binding: 6,
+                visibility: ShaderStages::COMPUTE,
+                ty: BindingType::Buffer {
+                    ty: BufferBindingType::Storage { read_only: false },
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            },
+            BindGroupLayoutEntry {
+                binding: 7,
                 visibility: ShaderStages::COMPUTE,
                 ty: BindingType::Buffer {
                     ty: BufferBindingType::Uniform,
@@ -105,10 +115,14 @@ pub fn compute_objects(device: &wgpu::Device, buffers: &Buffers, shaders: &Shade
             },
             BindGroupEntry {
                 binding: 5,
-                resource: buffers.object_buffer.as_entire_binding(),
+                resource: buffers.raw_object_buffer.as_entire_binding(),
             },
             BindGroupEntry {
                 binding: 6,
+                resource: buffers.object_buffer.as_entire_binding(),
+            },
+            BindGroupEntry {
+                binding: 7,
                 resource: buffers.object_count_buffer.as_entire_binding(),
             },
         ],

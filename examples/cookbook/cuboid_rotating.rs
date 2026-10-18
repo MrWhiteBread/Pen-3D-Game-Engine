@@ -1,7 +1,7 @@
 use glam::Quat;
 use crate::engine::back::render::render::Render;
 use crate::engine::back::render::scene::Scene;
-use crate::engine::back::types::object::Object;
+use crate::engine::back::types::object::raw_object::Object;
 use crate::engine::front::components::camera::Camera;
 use crate::engine::front::components::light::Light;
 use crate::engine::front::components::materials::METAL;
@@ -39,7 +39,7 @@ impl Game {
         mesh.load(&scene); // loads the mesh
 
         // creates an object using position/center rotation, size, color and material
-        let object = Object::new(&[0.0, -2.0, -5.0], &[0.0; 3], &[1.0; 3], &[1.0, 0.5, 0.3, 1.0], &METAL);
+        let object = Object::new(&[0.0, -2.0, -5.0], &[0.0; 3], &[1.0; 3], [255, 125, 20], &METAL);
         let mut model = Model::from(object, &mut mesh); // creates a model using "object" and a &mut of "mesh"
         model.load(&scene); // loads the model
 

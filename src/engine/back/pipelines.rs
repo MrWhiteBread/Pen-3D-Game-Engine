@@ -31,8 +31,8 @@ pub struct Pipelines {
     pub deferred_v: PassState,
     pub deferred_f: ScreenPassState,
 
-    pub forward_pass: ScreenPassState,
-    pub per_pixel_forward_pass: ScreenPassState,
+    pub forward_pass: PassState,
+    pub per_pixel_forward_pass: PassState,
     pub mipmap: SimplePassState,
 }
 
@@ -47,8 +47,8 @@ impl Pipelines {
         let deferred_v = deferred_v(device, buffers, &shaders);
         let deferred_f = deferred_f(device, buffers, config, &shaders, &screen_textures);
 
-        let forward_pass = forward(device, buffers, config, &shaders, &screen_textures);
-        let per_pixel_forward_pass = per_pixel_forward(device, buffers, config, &shaders, &screen_textures);
+        let forward_pass = forward(device, buffers, config, &shaders);
+        let per_pixel_forward_pass = per_pixel_forward(device, buffers, config, &shaders);
 
         let mipmap = mipmap(device, &shaders);
 
