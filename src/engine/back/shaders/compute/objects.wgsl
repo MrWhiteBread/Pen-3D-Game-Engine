@@ -67,19 +67,17 @@ fn compute_main(@builtin(local_invocation_id) local_id: vec3<u32>, @builtin(glob
     workgroupBarrier();
 
     if valid {
-        var obj = objects[idx];
-
         let q = slerp(raw_obj.old_rot, raw_obj.rot, globals.t);
         let rot_mat = quat_to_mat3(q);
 
-        obj.rot_mat1 = vec4<f32>(rot_mat[0], bitcast<f32>(raw_obj.color));
-        obj.rot_mat2 = vec4<f32>(rot_mat[1], bitcast<f32>(raw_obj.old_color));
-        obj.rot_mat3 = vec4<f32>(rot_mat[2], bitcast<f32>(raw_obj.id));
+        objects[idx] = Object(
+            vec4<f32>(rot_mat[0], bitcast<f32>(raw_obj.color)),
+            vec4<f32>(rot_mat[1], bitcast<f32>(raw_obj.old_color)),
+            vec4<f32>(rot_mat[2], bitcast<f32>(raw_obj.id)),
 
-        obj.center = mix(raw_obj.old_center, raw_obj.center, globals.t);
-        obj.size = mix(raw_obj.old_size, raw_obj.size, globals.t);
-
-        objects[idx] = obj;
+            mix(raw_obj.old_center, raw_obj.center, globals.t),
+            mix(raw_obj.old_size, raw_obj.size, globals.t),
+        );
 
         let slot = index + local_slot;
 

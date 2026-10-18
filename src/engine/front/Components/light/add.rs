@@ -1,5 +1,4 @@
 use glam::{Quat, Vec3};
-use crate::engine::back::types::light::LightType;
 use crate::engine::front::components::light::Light;
 
 impl Light {

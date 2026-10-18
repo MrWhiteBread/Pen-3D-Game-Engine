@@ -3,9 +3,9 @@ mod get;
 mod set;
 mod global;
 
-use glam::{EulerRot, Quat, Vec3};
+use glam::{Quat, Vec3};
 use crate::engine::back::render::scene::Scene;
-use crate::engine::back::types::light::LightType;
+use crate::engine::back::types::light::raw_light::LightType;
 pub struct Light {
     scene: Option<Scene>,
     light: Option<LightType>,

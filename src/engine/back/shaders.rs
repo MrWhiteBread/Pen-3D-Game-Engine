@@ -36,7 +36,8 @@ impl<'a> Shaders<'a> {
         let lights = concat!(
             include_str!("shaders\\structs\\globals.wgsl"), '\n',
             include_str!("shaders\\structs\\camera.wgsl"), '\n',
-            include_str!("shaders\\structs\\light.wgsl"), '\n',
+            include_str!("shaders\\structs\\light\\raw_light.wgsl"), '\n',
+            include_str!("shaders\\structs\\light\\light.wgsl"), '\n',
     
             include_str!("shaders\\compute\\lights.wgsl"),
         );
@@ -48,7 +49,7 @@ impl<'a> Shaders<'a> {
             include_str!("shaders\\structs\\globals.wgsl"), '\n',
             include_str!("shaders\\structs\\camera.wgsl"), '\n',
             include_str!("shaders\\structs\\object\\object.wgsl"), '\n',
-            include_str!("shaders\\structs\\light.wgsl"), '\n',
+            include_str!("shaders\\structs\\light\\light.wgsl"), '\n',
         
             include_str!("shaders\\r_parts\\light.wgsl"), '\n',
             include_str!("shaders\\r_parts\\colours.wgsl"), '\n',
@@ -60,7 +61,7 @@ impl<'a> Shaders<'a> {
         let per_pixel_forward_rendering = concat!(
             include_str!("shaders\\structs\\globals.wgsl"), '\n',
             include_str!("shaders\\structs\\camera.wgsl"), '\n',
-            include_str!("shaders\\structs\\light.wgsl"), '\n',
+            include_str!("shaders\\structs\\light\\light.wgsl"), '\n',
 
             include_str!("shaders\\render\\vs_main_fill.wgsl"), '\n',
             include_str!("shaders\\render\\per_pixel_forward_shader.wgsl"),
@@ -81,7 +82,7 @@ impl<'a> Shaders<'a> {
         let deferred_fragment = concat!(
             include_str!("shaders\\structs\\globals.wgsl"), '\n',
             include_str!("shaders\\structs\\camera.wgsl"), '\n',
-            include_str!("shaders\\structs\\light.wgsl"), '\n',
+            include_str!("shaders\\structs\\light\\light.wgsl"), '\n',
 
             include_str!("shaders\\r_parts\\light.wgsl"), '\n',
             include_str!("shaders\\r_parts\\colours.wgsl"), '\n',

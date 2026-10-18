@@ -1,23 +1,19 @@
 use half::f16;
-use crate::engine::back::types::light::LightType;
+use crate::engine::back::types::light::raw_light::LightType;
 use crate::engine::back::types::object::raw_object::Object;
 use crate::engine::back::types::vertex::Vertex;
 
 pub const FAKE_LIGHT: LightType = LightType {
     position: [0.0; 4],
-    lerp_position: [0.0; 4],
     old_position: [0.0; 4],
     
     rotation: [0.0; 4],
-    lerp_rotation: [0.0; 4],
     old_rotation: [0.0; 4],
     
     color: [0.0; 4],
-    lerp_color: [0.0; 4],
     old_color: [0.0; 4],
     
     attributes: [0.0; 4],
-    lerp_attributes: [0.0; 4],
     old_attributes: [0.0; 4],
 };
 

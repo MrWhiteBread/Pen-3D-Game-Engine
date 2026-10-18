@@ -8,9 +8,12 @@ var<storage, read> globals: Globals;
 var<storage, read> camera: Camera;
 
 @group(0) @binding(4)
-var<storage, read_write> lights: array<Light>;
+var<storage, read> raw_lights: array<RawLight>;
 
 @group(0) @binding(5)
+var<storage, read_write> lights: array<Light>;
+
+@group(0) @binding(6)
 var<uniform> light_count: u32;
 
 var<workgroup> counter: atomic<u32>;
@@ -27,10 +30,10 @@ fn compute_main(@builtin(local_invocation_id) local_id: vec3<u32>, @builtin(glob
     workgroupBarrier();
 
     var valid = false;
-    var light: Light;
+    var light: RawLight;
 
     if idx < light_count {
-        light = lights[idx];
+        light = raw_lights[idx];
 
         if frustum_culling(light) {
             valid = true;
@@ -55,19 +58,20 @@ fn compute_main(@builtin(local_invocation_id) local_id: vec3<u32>, @builtin(glob
     workgroupBarrier();
 
     if valid {
-        light.lerp_position = mix(light.old_position, light.position, globals.t);
-        light.lerp_rotation = mix(light.old_rotation, light.rotation, globals.t);
-        light.lerp_color = mix(light.old_color, light.color, globals.t);
-        light.lerp_attributes = mix(light.old_attributes, light.attributes, globals.t);
+        lights[idx] = Light(
+            mix(light.old_position, light.position, globals.t),
+            mix(light.old_rotation, light.rotation, globals.t),
 
-        lights[idx] = light;
+            mix(light.old_color, light.color, globals.t),
+            mix(light.old_attributes, light.attributes, globals.t),
+        );
 
         let slot = index + local_slot;
         light_ids[slot] = idx;
     }
 }
 
-fn frustum_culling(light: Light) -> bool
+fn frustum_culling(light: RawLight) -> bool
 {
     let radius = mix(light.old_attributes[1], light.attributes[1], globals.t);
     let center = mix(light.old_position, light.position, globals.t).xyz;

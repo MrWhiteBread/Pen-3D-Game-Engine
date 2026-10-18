@@ -12,29 +12,29 @@ fn calculate_light(light: Light, in: Vertex, color: vec3<f32>) -> vec3<f32> {
     let normal = normalize(in.world_normal);
     let camera_normal = normalize(camera.position.xyz - in.world_position);
 
-    let light_vec = light.lerp_position.xyz - in.world_position;
+    let light_vec = light.position.xyz - in.world_position;
     let norm_light = normalize(light_vec);
 
     let PI: f32 = 3.14159265358979323846;
     var intensity: f32;
 
-    if light.lerp_attributes[2] > 180.0 {
-        let fov = (360.0 - light.lerp_attributes[2]) * (PI / 180.0);
+    if light.attributes[2] > 180.0 {
+        let fov = (360.0 - light.attributes[2]) * (PI / 180.0);
         let cone_edge = cos(fov * 0.55);
         let soft_edge = cos(fov * 0.5);
-        let cos_angle = dot(norm_light, normalize(light.lerp_rotation.xyz));
+        let cos_angle = dot(norm_light, normalize(light.rotation.xyz));
 
         intensity = 1.0 - smoothstep(cone_edge, soft_edge, cos_angle);
     } else {
-        let fov = light.lerp_attributes[2] * (PI / 180.0);
+        let fov = light.attributes[2] * (PI / 180.0);
         let cone_edge = cos(fov * 0.5);
         let soft_edge = cos(fov * 0.45);
 
-        let cos_angle = dot(norm_light, -normalize(light.lerp_rotation.xyz));
+        let cos_angle = dot(norm_light, -normalize(light.rotation.xyz));
         intensity = smoothstep(cone_edge, soft_edge, cos_angle);
     }
 
-    let radius = light.lerp_attributes[1];
+    let radius = light.attributes[1];
     let dist = length(light_vec);
 
 
@@ -49,11 +49,11 @@ fn calculate_light(light: Light, in: Vertex, color: vec3<f32>) -> vec3<f32> {
     let spec = pow(max(dot(normal, something), 0.0), shininess);
 
     let metallic = in.material[1];
-    let spec_colour = mix(vec3<f32>(0.0), color * light.lerp_color.rgb, metallic);
+    let spec_colour = mix(vec3<f32>(0.0), color * light.color.rgb, metallic);
 
-    let softness = light.lerp_attributes[0];
+    let softness = light.attributes[0];
 
-    let attenuation = light.lerp_color.a * (pow(radius / dist, softness) - 1.0);
+    let attenuation = light.color.a * (pow(radius / dist, softness) - 1.0);
     let diffuse = color * diff * (1.0 - metallic);
     let specular = spec_colour * spec;
 

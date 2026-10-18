@@ -8,7 +8,8 @@ use crate::engine::back::types::bone::Bone;
 use crate::engine::back::types::camera::{CameraUniform, Plane};
 use crate::engine::back::types::draw_indexed_indirect_args::DrawIndexedIndirectArgs;
 use crate::engine::back::types::globals::Globals;
-use crate::engine::back::types::light::LightType;
+use crate::engine::back::types::light::raw_light::LightType;
+use crate::engine::back::types::light;
 use crate::engine::back::types::object;
 use crate::engine::back::types::object::raw_object::Object;
 use crate::engine::back::types::vertex::Vertex;
@@ -29,6 +30,7 @@ pub struct Buffers {
     pub object_count_buffer: Buffer,
     
     pub light_buffer: Buffer,
+    pub raw_light_buffer: Buffer,
     pub light_count_buffer: Buffer,
     pub count_light_buffer: Buffer,
     pub light_ids_buffer: Buffer,
@@ -184,11 +186,16 @@ impl Buffers {
             usage: BufferUsages::UNIFORM | BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
-       
 
-        //let max_lights = safe_max_bytes / size_of::<LightType>();
-        
+
         let light_buffer = device.create_buffer(&BufferDescriptor {
+            label: Some("Light buffer"),
+            size: (size_of::<light::light::Light>() * max_lights) as BufferAddress,
+            usage: BufferUsages::STORAGE,
+            mapped_at_creation: false,
+        });
+        
+        let raw_light_buffer = device.create_buffer(&BufferDescriptor {
             label: Some("Light buffer"),
             size: (size_of::<LightType>() * max_lights) as BufferAddress,
             usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
@@ -225,7 +232,6 @@ impl Buffers {
 
 
 
-        //let max_bones = safe_max_bytes / size_of::<Bone>();
         let max_bones = 1;
 
         let bone_buffer = device.create_buffer(&BufferDescriptor {
@@ -284,6 +290,7 @@ impl Buffers {
                 object_count_buffer,
 
                 light_buffer,
+                raw_light_buffer,
                 light_count_buffer,
                 count_light_buffer,
                 light_ids_buffer,

@@ -5,7 +5,7 @@ use crate::engine::back::staging_buffers::StagingBuffers;
 use crate::engine::back::state::State;
 use crate::engine::back::types::camera::CameraUniform;
 use crate::engine::back::types::globals::Globals;
-use crate::engine::back::types::light::LightType;
+use crate::engine::back::types::light::raw_light::LightType;
 use crate::engine::back::types::object::raw_object::Object;
 use crate::engine::back::types::vertex::Vertex;
 
@@ -91,7 +91,7 @@ impl<'a> State<'a> {
             encoder.copy_buffer_to_buffer(
                 &staging_buffers.light_staging,
                 0,
-                &self.buffers.light_buffer,
+                &self.buffers.raw_light_buffer,
                 staging_buffers.light_dest_offset,
                 (size_of::<LightType>() * staging_buffers.light_count as usize) as BufferAddress,
             );

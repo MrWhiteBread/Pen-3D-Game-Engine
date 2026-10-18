@@ -2,11 +2,10 @@ use std::cell::{RefCell};
 use std::rc::Rc;
 use crate::engine::back::render::selective_systems::dynamic_chunks::{DynamicChunks, Usage};
 use crate::engine::back::staging_buffers::StagingBuffers;
-use crate::engine::back::types::light::LightType;
+use crate::engine::back::types::light::raw_light::LightType;
 use crate::engine::back::types::object::raw_object::Object;
 use crate::engine::back::types::vertex::Vertex;
 use crate::engine::front::components::camera::Camera;
-use crate::engine::front::components::mesh::Mesh;
 
 pub struct SceneImpl {
     pub staging_buffers: StagingBuffers,

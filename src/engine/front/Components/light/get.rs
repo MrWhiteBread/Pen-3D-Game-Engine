@@ -1,4 +1,4 @@
-use crate::engine::back::types::light::LightType;
+use crate::engine::back::types::light::raw_light::LightType;
 use crate::engine::front::components::light::Light;
 
 impl Light {

@@ -3,7 +3,7 @@ use indexmap::IndexSet;
 use wgpu::Extent3d;
 use crate::engine::back::render::selective_systems::dynamic_chunks::registry::{DataRegistry, DataRegistryArray, DataRegistryPlus, LidRegistry, LidRegistryArray, LidRegistryTexture};
 use crate::engine::back::render::selective_systems::fakes::{FAKE_INDEX, FAKE_LIGHT, FAKE_OBJECT, FAKE_VERTEX};
-use crate::engine::back::types::light::LightType;
+use crate::engine::back::types::light::raw_light::LightType;
 use crate::engine::back::types::object::raw_object::Object;
 use crate::engine::back::types::vertex::Vertex;
 

@@ -2,7 +2,7 @@ use kiddo::SquaredEuclidean;
 use crate::engine::back::render::selective_systems::dynamic_chunks::data::Chunk;
 use crate::engine::back::render::selective_systems::dynamic_chunks::DynamicChunks;
 use crate::engine::back::render::selective_systems::dynamic_chunks::registry::{DataRegistry, LidRegistry};
-use crate::engine::back::types::light::LightType;
+use crate::engine::back::types::light::raw_light::LightType;
 
 impl DynamicChunks {
     pub fn add_light(&mut self, light: LightType) -> u32 {
