@@ -85,7 +85,7 @@ impl DynamicChunks {
         self.add(chunk_id, object)
     }
 
-   /* pub fn remove_object(&mut self, id: u32) -> Object {
+    pub fn remove_object(&mut self, id: u32) -> Object {
         if self.data.objects.type_.get(&id).expect("type not found").is_none() {
             Self::swap_remove_data_plus(id, &mut self.data.objects, &mut self.lid.objects, &mut |object, payload| {
                 Self::remove_object_data(
@@ -97,9 +97,18 @@ impl DynamicChunks {
                     &mut self.lid.indices
                 );
             });
-
         }
-    }*/
+
+        let chunk_id = self.data.objects.chunk.remove(&id).expect("chunk not found");
+        self.chunks.get_mut(&chunk_id).expect("chunk not found").objects.remove(&id);
+        self.remove_empty_chunk(chunk_id);
+
+        self.data.objects.ids.remove(id);
+        self.data.objects.payload.remove(&id);
+        self.data.objects.type_i.remove(&id);
+
+        self.data.objects.type_.remove(&id).expect("type not found").expect("type not found")
+    }
 
     fn add(&mut self, chunk_id: u32, object: Object) -> u32 {
         let chunk = self.chunks.get_mut(&chunk_id).expect("chunk not found");
@@ -134,14 +143,14 @@ impl DynamicChunks {
     }
 
     pub fn remove_object_mesh(&mut self, id: u32) {
-        let vec = self.data.objects.payload.get_mut(&id).expect("object not found");
+        let array = self.data.objects.payload.get_mut(&id).expect("object not found");
         let mesh_ids = [
-            vec[0].expect("no mesh vertex id"),
-            vec[1].expect("no mesh index id"),
+            array[0].expect("no mesh vertex id"),
+            array[1].expect("no mesh index id"),
         ];
 
-        vec[0] = None;
-        vec[1] = None;
+        array[0] = None;
+        array[1] = None;
 
         if self.data.objects.type_.get(&id).expect("type not found").is_none() {
             Self::remove_data_array(
@@ -174,11 +183,25 @@ impl DynamicChunks {
     }
 
     pub fn set_object_mesh(&mut self, id: u32, mesh_ids: &[u32; 2]) {
-        let vec = self.data.objects.payload.get_mut(&id).expect("object not found");
-        vec[0] = Some(mesh_ids[0]);
-        vec[1] = Some(mesh_ids[1]);
+        let array = self.data.objects.payload.get_mut(&id).expect("object not found");
 
         if self.data.objects.type_.get(&id).expect("type not found").is_none() {
+            if let (Some(mesh_id0), Some(mesh_id1)) = (array[0].take(), array[1].take()) {
+                Self::remove_data_array(
+                    mesh_id0,
+                    &mut self.data.vertices,
+                    &mut self.lid.vertices,
+                    &mut |_| {}
+                );
+
+                Self::remove_data_array(
+                    mesh_id1,
+                    &mut self.data.indices,
+                    &mut self.lid.indices,
+                    &mut |_| {}
+                );
+            }
+
             Self::add_data_array(
                 mesh_ids[0],
                 &mut self.data.vertices,
@@ -203,6 +226,9 @@ impl DynamicChunks {
             object.index_count = (ind[1] - ind[0]) as u32;
 
         }
+
+        array[0] = Some(mesh_ids[0]);
+        array[1] = Some(mesh_ids[1]);
     }
 
     pub fn object_changed(&mut self, id: u32) {

@@ -1,6 +1,6 @@
-use crate::engine::front::components::model::Model;
+use crate::engine::front::components::model::{Model, RawModel};
 
-impl Model {
+impl RawModel {
     pub(crate) fn rot(&mut self, rot: &[f32; 4], lerp: bool) {
         if let Some(scene) = &mut self.scene {
             unsafe {

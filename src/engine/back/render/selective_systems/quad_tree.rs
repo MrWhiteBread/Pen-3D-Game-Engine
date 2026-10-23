@@ -175,16 +175,11 @@ impl<T: Copy> Node<T> {
 
     fn magic(&mut self) {
         unsafe {
-            if self.used
+            self.full = self.used
                 && (self.x1y1 == null_mut() || (*self.x1y1).full)
                 && (self.x1y0 == null_mut() || (*self.x1y0).full)
                 && (self.x0y1 == null_mut() || (*self.x0y1).full)
-                && (self.x0y0 == null_mut() || (*self.x0y0).full) {
-
-                self.full = true;
-            } else {
-                self.full = false;
-            }
+                && (self.x0y0 == null_mut() || (*self.x0y0).full);
         }
     }
 

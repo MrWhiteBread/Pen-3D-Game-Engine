@@ -1,3 +1,4 @@
+use std::cell::Ref;
 use glam::Quat;
 use crate::engine::front::components::mesh::Mesh;
 
@@ -57,9 +58,5 @@ impl Object {
 
             padding: 0,
         }
-    }
-
-    pub fn set_mesh(&mut self, mesh: &Mesh) {
-        self.radius = mesh.get_radius();
     }
 }

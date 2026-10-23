@@ -1,13 +1,3 @@
-struct Vertex {
-    position: vec3<f32>,
-    color: vec3<f32>,
-    world_normal: vec3<f32>,
-    world_position: vec3<f32>,
-    material: vec2<f32>,
-    uv: vec2<f32>,
-    id: u32,
-}
-
 fn calculate_light(light: Light, in: Vertex, color: vec3<f32>) -> vec3<f32> {
     let normal = normalize(in.world_normal);
     let camera_normal = normalize(camera.position.xyz - in.world_position);

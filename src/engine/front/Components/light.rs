@@ -34,7 +34,9 @@ impl Light {
 
     #[track_caller]
     pub fn load(&mut self, scene: &Scene) {
-        if self.scene.is_none() && let Some(light) = self.light.take() {
+        if self.scene.is_none() {
+            let light = self.light.take().expect("empty light");
+            
             self.id = scene.add_light(light);
             self.scene = Some(scene.clone());
         } else {
@@ -44,7 +46,7 @@ impl Light {
 
     #[track_caller]
     pub fn unload(&mut self) {
-        if let Some(scene) = self.scene.as_mut() && self.light.is_none(){
+        if let Some(mut scene) = self.scene.take() {
             self.light = Some(scene.remove_light(self.id));
         } else {
             panic!("Light is already unloaded");

@@ -1,36 +1,67 @@
 use glam::Quat;
-use crate::engine::front::components::mesh::Mesh;
-use crate::engine::front::components::model::Model;
+use crate::engine::front::components::mesh::{Mesh, RawMesh};
+use crate::engine::front::components::model::{Model, RawModel};
 
 impl Model {
     pub fn set_mesh(&mut self, mesh: &mut Mesh) {
+        unsafe {
+            (*self.model).set_mesh(mesh.get_raw_mesh());
+        }
+    }
+
+    pub fn set_pos(&mut self, pos: &[f32; 3], lerp: bool) {
+        unsafe {
+            (*self.model).set_pos(pos, lerp);
+        }
+    }
+
+    pub fn set_rot(&mut self, rot: &[f32; 3], lerp: bool) {
+        unsafe {
+            (*self.model).set_rot(rot, lerp);
+        }
+    }
+
+    pub fn set_size(&mut self, size: &[f32; 3], lerp: bool) {
+        unsafe {
+            (*self.model).set_size(size, lerp);
+        }
+    }
+}
+
+impl RawModel {
+    pub fn set_mesh(&mut self, mesh: *mut RawMesh) {
         if !self.mesh.is_null() {
             unsafe {
-                if self.object.is_none() {
+                if self.scene.is_some() {
                     (*self.mesh)._remove_loaded_model(self.mesh_id);
                 } else {
                     (*self.mesh)._remove_unloaded_model(self.mesh_id);
                 }
             }
         }
-        
+
         self.mesh = mesh;
 
-        if let Some(scene) = self.scene.as_ref() && self.object.is_none() {
+        if let Some(scene) = self.scene.as_ref() {
             unsafe {
                 scene.set_object_mesh(self.id, (*self.mesh).get_ids());
-                let object = scene.get_mut_object(self.id);
-                object.set_mesh(mesh);
+
+                let mut object = scene.get_mut_object(self.id);
+                Self::set_obj_mesh(&mut object, mesh);
 
                 self.mesh_id = (*self.mesh)._add_loaded_model(self);
             }
 
-        } else if let Some(object) = self.object.as_mut() {
-            object.set_mesh(mesh);
-            self.mesh_id = mesh._add_unloaded_model(self);
+        } else {
+            let mut object = self.object.as_mut().expect("empty object");
+            
+            unsafe {
+                Self::set_obj_mesh(&mut object, mesh);
+                self.mesh_id = (*mesh)._add_unloaded_model(self);
+            }
         }
     }
-    
+
     pub fn set_pos(&mut self, pos: &[f32; 3], lerp: bool) {
         if let Some(scene) = &mut self.scene {
             unsafe {

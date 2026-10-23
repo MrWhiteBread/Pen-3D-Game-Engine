@@ -1,3 +1,13 @@
+struct Vertex {
+    position: vec3<f32>,
+    color: vec3<f32>,
+    world_normal: vec3<f32>,
+    world_position: vec3<f32>,
+    material: vec2<f32>,
+    uv: vec2<f32>,
+    id: u32,
+}
+
 fn get_colour(vertex: Vertex) -> vec3<f32> {
     var color = vertex.color;
     var light_colours = vec3<f32>(0.0);

@@ -34,12 +34,13 @@ impl DynamicChunks {
                 &mut |_| {}
             );
         }
+
         let chunk_id = self.data.lights.chunk.remove(&id).expect("chunk not found for light");
+        self.chunks.get_mut(&chunk_id).expect("chunk not found").lights.remove(&id);
+        self.remove_empty_chunk(chunk_id);
 
         self.data.lights.ids.remove(id);
         self.data.lights.type_i.remove(&id);
-        self.chunks.get_mut(&chunk_id).expect("chunk not found").lights.remove(&id);
-        self.remove_empty_chunk(chunk_id);
 
         self.data.lights.type_.remove(&id).expect("light type not found").expect("NO")
     }

@@ -1,7 +1,27 @@
 use glam::Quat;
-use crate::engine::front::components::model::Model;
+use crate::engine::front::components::model::{Model, RawModel};
 
 impl Model {
+    pub fn add_pos(&mut self, pos: &[f32; 3], lerp: bool) {
+        unsafe {
+            (*self.model).add_pos(pos, lerp);
+        }
+    }
+
+    pub fn add_rot(&mut self, rot: &[f32; 3], lerp: bool) {
+        unsafe {
+            (*self.model).add_rot(rot, lerp);
+        }
+    }
+
+    pub fn add_size(&mut self, size: &[f32; 3], lerp: bool) {
+        unsafe {
+            (*self.model).add_size(size, lerp);
+        }
+    }
+}
+
+impl RawModel {
     pub fn add_pos(&mut self, pos: &[f32; 3], lerp: bool) {
         if let Some(scene) = &mut self.scene {
             unsafe {

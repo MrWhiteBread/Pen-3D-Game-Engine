@@ -103,14 +103,16 @@ impl Scene {
         self.scene.borrow_mut().selective_system.object_changed(id);
     }
 
-    #[allow(unsafe_op_in_unsafe_fn)]
     pub unsafe fn get_object(&self, id: u32) -> &Object {
-        self.scene.borrow().selective_system.get_object(id).as_ref().expect("no object found")
+        unsafe {
+            self.scene.borrow().selective_system.get_object(id).as_ref().expect("no object found")
+        }
     }
 
-    #[allow(unsafe_op_in_unsafe_fn)]
     pub unsafe fn get_mut_object(&self, id: u32) -> &mut Object {
-        self.scene.borrow_mut().selective_system.get_mut_object(id).as_mut().expect("no object found")
+        unsafe {
+            self.scene.borrow_mut().selective_system.get_mut_object(id).as_mut().expect("no object found")
+        }
     }
 
 
@@ -119,14 +121,16 @@ impl Scene {
         self.scene.borrow_mut().selective_system.light_changed(id);
     }
 
-    #[allow(unsafe_op_in_unsafe_fn)]
     pub unsafe fn get_light(&self, id: u32) -> &LightType {
-        self.scene.borrow().selective_system.get_light(id).as_ref().expect("no light found")
+        unsafe {
+            self.scene.borrow().selective_system.get_light(id).as_ref().expect("no light found")
+        }
     }
 
-    #[allow(unsafe_op_in_unsafe_fn)]
     pub unsafe fn get_mut_light(&self, id: u32) -> &mut LightType {
-        self.scene.borrow_mut().selective_system.get_mut_light(id).as_mut().expect("no light found")
+        unsafe {
+            self.scene.borrow_mut().selective_system.get_mut_light(id).as_mut().expect("no light found")
+        }
     }
 
     pub fn verify_model(&self, id: u32) {
@@ -221,6 +225,10 @@ impl Scene {
     
     pub fn remove_mesh(&mut self, mesh_ids: &[u32; 2]) -> (Vec<Vertex>, Vec<u32>) {
         self.scene.borrow_mut().selective_system.remove_mesh(mesh_ids)
+    }
+    
+    pub fn remove_object(&mut self, id: u32) -> Object {
+        self.scene.borrow_mut().selective_system.remove_object(id)
     }
     
     pub fn set_object_mesh(&self, id: u32, mesh_ids: &[u32; 2]) {

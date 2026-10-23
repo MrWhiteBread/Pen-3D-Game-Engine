@@ -67,6 +67,7 @@ impl Game {
 
     fn move_along_rotation(speed: &f32, rotation: &Quat, pos: &mut [f32; 3], direction: glam::Vec3) {
         let direction = rotation * direction;
+        
         pos[0] -= direction.x * speed;
         pos[1] -= direction.y * speed;
         pos[2] -= direction.z * speed;
