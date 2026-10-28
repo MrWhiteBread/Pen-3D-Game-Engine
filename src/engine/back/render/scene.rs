@@ -207,7 +207,7 @@ impl Scene {
         self.scene.borrow_mut().camera = camera.clone();
     }
 
-    pub fn add_object(&self, object: Object) -> u32 {
+    pub fn add_object(&self, object: &Object) -> u32 {
         self.scene.borrow_mut().selective_system.add_object(object)
     }
 
@@ -215,7 +215,7 @@ impl Scene {
         self.scene.borrow_mut().selective_system.add_mesh(vertices, indices)
     }
 
-    pub fn add_light(&self, light: LightType) ->  u32 {
+    pub fn add_light(&self, light: &LightType) ->  u32 {
         self.scene.borrow_mut().selective_system.add_light(light)
     }
     
@@ -246,6 +246,18 @@ impl Scene {
 
     pub fn get_staging_buffers(&self) -> StagingBuffers {
         self.scene.borrow().staging_buffers.clone()
+    }
+
+    pub fn new_chunk(&mut self, points: Vec<[f32; 3]>, vertices: &Vec<[f32; 3]>, indices: &Vec<u32>, protected: bool, private: bool) -> u32 {
+        self.scene.borrow_mut().selective_system.new_manual_chunk(points, vertices, indices, protected, private)
+    }
+    
+    pub fn set_object_chunk(&mut self, id: u32, chunk_id: u32) {
+        self.scene.borrow_mut().selective_system.set_object_chunk(id, chunk_id);
+    }
+
+    pub fn set_light_chunk(&mut self, id: u32, chunk_id: u32) {
+        self.scene.borrow_mut().selective_system.set_light_chunk(id, chunk_id);
     }
     
     pub fn setup_offsets(&mut self) {

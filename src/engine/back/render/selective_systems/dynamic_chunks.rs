@@ -1,7 +1,6 @@
 mod runners;
 mod registry;
 mod data;
-mod chunk;
 mod types;
 
 use std::collections::{BTreeSet, HashMap, HashSet};
@@ -17,7 +16,10 @@ pub struct DynamicChunks {
 
     chunks_size: f32,
 
-    tree: kiddo::float::kdtree::KdTree<f32, u32, 3, 64, u32>,
+    auto_tree: kiddo::float::kdtree::KdTree<f32, u32, 3, 64, u32>,
+    non_protected_tree: kiddo::float::kdtree::KdTree<f32, u32, 3, 64, u32>,
+    non_private_tree: kiddo::float::kdtree::KdTree<f32, u32, 3, 64, u32>,
+
     chunks: HashMap<u32, Chunk>,
     new_chunks: IndexSet<u32>,
 
@@ -35,7 +37,7 @@ impl DynamicChunks {
     pub fn new(chunks_size: f32) -> Self {
         let default_space = [
             1_000,
-            200_000,
+            1_000_000,
             5_000_000,
             10_000_000,
         ];
@@ -52,7 +54,10 @@ impl DynamicChunks {
         Self {
             chunks_size,
 
-            tree: kiddo::float::kdtree::KdTree::new(),
+            auto_tree: kiddo::float::kdtree::KdTree::new(),
+            non_protected_tree: kiddo::float::kdtree::KdTree::new(),
+            non_private_tree: kiddo::float::kdtree::KdTree::new(),
+
             chunks: HashMap::new(),
             new_chunks: IndexSet::new(),
 
@@ -79,63 +84,24 @@ impl DynamicChunks {
 
             let radius_squared = god[3] * god[3];
 
-            let sphere: BTreeSet<_> = self.tree
+            let sphere1: BTreeSet<_> = self.auto_tree
                 .within::<SquaredEuclidean>(&center, radius_squared)
                 .into_iter()
                 .map(|id| id.item)
                 .collect();
 
-            visible_chunks.extend(sphere);
+            let sphere2: BTreeSet<_> = self.non_private_tree
+                .within::<SquaredEuclidean>(&center, radius_squared)
+                .into_iter()
+                .map(|id| id.item)
+                .collect();
+
+            visible_chunks.extend(sphere1);
+            visible_chunks.extend(sphere2);
         }
 
-        self.iter_remove_chunks(&visible_chunks,  |lid, data, chunk| {
-            Self::iter_swap_remove_data(
-                &mut chunk.lights,
-                &mut data.lights,
-                &mut lid.lights,
-                &mut |_| {}
-            );
-            
-            Self::iter_swap_remove_data_plus(
-                &mut chunk.objects,
-                &mut data.objects,
-                &mut lid.objects,
-                &mut |object, payload| {
-                    Self::remove_object_data(
-                        object,
-                        payload,
-                        &mut data.vertices,
-                        &mut data.indices,
-                        &mut lid.vertices,
-                        &mut lid.indices
-                    );
-                }
-            );
-        });
-
-        self.iter_add_chunks(&visible_chunks,  |lid, chunk, data| {
-            Self::iter_add_data(
-                &mut chunk.lights,
-                &mut data.lights,
-                &mut lid.lights,
-            );
-
-            Self::iter_add_data_plus(
-                &mut chunk.objects,
-                &mut data.objects,
-                &mut lid.objects,
-                &mut |object, payload| {
-                    Self::add_object_data(
-                        object,
-                        payload,
-                        &mut data.vertices,
-                        &mut data.indices,
-                        &mut lid.vertices,
-                        &mut lid.indices
-                    );
-                }
-            );
-        });
+        self.iter_remove_chunks(&visible_chunks);
+        self.iter_add_chunks(&visible_chunks);
 
         fn write_data<T: bytemuck::Pod>(queue: &Queue, buffer: &Buffer, array: &Vec<T>, count: &mut u32, size: usize) {
             queue.write_buffer(

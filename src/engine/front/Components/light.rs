@@ -37,7 +37,7 @@ impl Light {
         if self.scene.is_none() {
             let light = self.light.take().expect("empty light");
             
-            self.id = scene.add_light(light);
+            self.id = scene.add_light(&light);
             self.scene = Some(scene.clone());
         } else {
             panic!("Light is already loaded");

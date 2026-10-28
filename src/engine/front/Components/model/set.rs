@@ -3,6 +3,13 @@ use crate::engine::front::components::mesh::{Mesh, RawMesh};
 use crate::engine::front::components::model::{Model, RawModel};
 
 impl Model {
+    #[track_caller]
+    pub fn set_chunk(&mut self, id: u32) {
+        unsafe {
+            (*self.model).set_chunk(id);
+        }
+    }
+
     pub fn set_mesh(&mut self, mesh: &mut Mesh) {
         unsafe {
             (*self.model).set_mesh(mesh.get_raw_mesh());
@@ -29,6 +36,15 @@ impl Model {
 }
 
 impl RawModel {
+    #[track_caller]
+    pub fn set_chunk(&mut self, id: u32) {
+        if let Some(scene) = self.scene.as_mut() {
+            scene.set_object_chunk(self.id, id);
+        } else {
+            panic!("Can't set model chunk because it doesn't hold a scene")
+        }
+    }
+
     pub fn set_mesh(&mut self, mesh: *mut RawMesh) {
         if !self.mesh.is_null() {
             unsafe {

@@ -47,7 +47,7 @@ impl Buffers {
     pub fn new(device: &Device, info: &AdapterInfo, queue: Arc<Queue>, color_texture_view: TextureView, color_texture_size: Extent3d)-> (Self, StagingBuffers) {
         //TODO: make buffers dynamic, until then i will limit
         let max_lights = 1_000;
-        let max_objects = 200_000;
+        let max_objects = 1_000_000;
         let max_vertices = 5_000_000;
         let max_indices = 10_000_000;
         

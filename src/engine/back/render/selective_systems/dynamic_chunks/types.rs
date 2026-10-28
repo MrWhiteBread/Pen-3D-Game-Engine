@@ -4,6 +4,8 @@ mod object;
 mod light;
 mod global_fn;
 mod mesh;
+mod chunk;
+
 
 #[allow(dead_code)]
 impl DynamicChunks {

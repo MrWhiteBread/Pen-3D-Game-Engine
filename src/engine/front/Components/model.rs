@@ -132,7 +132,7 @@ impl RawModel {
     #[track_caller]
     pub fn load(&mut self, scene: &Scene) {
         if self.scene.is_none() && let Some(object) = self.object.take() {
-            self.id = scene.add_object(object);
+            self.id = scene.add_object(&object);
 
             if !self.mesh.is_null() {
                 unsafe {

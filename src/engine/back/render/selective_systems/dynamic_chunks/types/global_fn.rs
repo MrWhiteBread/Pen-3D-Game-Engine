@@ -1,4 +1,6 @@
 use std::collections::HashSet;
+use glam::Vec3;
+use crate::engine::back::render::selective_systems::dynamic_chunks::data::Chunk;
 use crate::engine::back::render::selective_systems::dynamic_chunks::DynamicChunks;
 use crate::engine::back::render::selective_systems::dynamic_chunks::registry::{DataRegistry, DataRegistryPlus, LidRegistry};
 
@@ -17,6 +19,31 @@ impl DynamicChunks {
             light.old_rotation = light.rotation;
             light.old_attributes = light.attributes;
         });
+    }
+
+    pub fn is_inside_chunk(chunks_size: f32, chunk: &Chunk, position: &[f32; 3]) -> bool {
+        if chunk.manual {
+            let chunk_req = chunk.chunk_req.as_ref().expect("trust me it works");
+            let point = Vec3::from(*position);
+            let distance = point.distance(Vec3::from(chunk.position));
+
+            if chunk_req.radius >= distance {
+                for plane in chunk_req.planes.iter() {
+                    if plane.normal.dot(point) + plane.d > 0.0 {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            false
+        } else {
+            let vec1 = Vec3::from(*position);
+            let vec2 = Vec3::from(chunk.position);
+
+            chunks_size >= vec1.distance(vec2)
+        }
     }
 
     fn updating_plus<F, T, const N: usize>(updater: &mut HashSet<u32>, data: &mut DataRegistryPlus<T, N>, lid: &mut LidRegistry<T>, mut f: F) where F: FnMut(&mut T) {

@@ -7,7 +7,7 @@ use crate::engine::back::types::vertex::Vertex;
 
 #[allow(dead_code)]
 impl DynamicChunks {
-    pub(crate) fn remove_object_data<const N: usize>(
+    pub fn remove_object_data<const N: usize>(
         object: &mut Object,
         payload: &[Option<u32>; N],
         data_v: &mut DataRegistryArray<Vertex>, data_i: &mut DataRegistryArray<u32>,
@@ -34,7 +34,7 @@ impl DynamicChunks {
         }
     }
 
-    pub(crate) fn add_object_data<const N: usize>(
+    pub fn add_object_data<const N: usize>(
         object: &mut Object,
         payload: &[Option<u32>; N],
         data_v: &mut DataRegistryArray<Vertex>, data_i: &mut DataRegistryArray<u32>,
@@ -64,15 +64,29 @@ impl DynamicChunks {
             object.index_count = (ind[1] - ind[0]) as u32;
         }
     }
-
-    pub fn add_object(&mut self, object: Object) -> u32 {
+    
+    pub fn add_object(&mut self, object: &Object) -> u32 {
         let position = [object.center[0], object.center[1], object.center[2]];
-        let nearest = self.tree.nearest_one::<SquaredEuclidean>(&position);
 
-        if nearest.distance <= self.chunks_size * self.chunks_size {
+        if self.non_protected_tree.size() > 0 {
+            let nearest = self.non_protected_tree.nearest_one::<SquaredEuclidean>(&position);
             let chunk = self.chunks.get_mut(&nearest.item).expect("chunk not found");
 
-            if !chunk.private {
+            if Self::is_inside_chunk(self.chunks_size, chunk, &position) {
+                if chunk.loaded {
+                    return self.add_loaded(nearest.item, object);
+                }
+
+                return self.add(nearest.item, object);
+            }
+        }
+        
+        if self.auto_tree.size() > 0 {
+            let nearest = self.auto_tree.nearest_one::<SquaredEuclidean>(&position);
+
+            if nearest.distance <= self.chunks_size * self.chunks_size {
+                let chunk = self.chunks.get_mut(&nearest.item).expect("chunk not found");
+
                 if chunk.loaded {
                     return self.add_loaded(nearest.item, object);
                 }
@@ -81,7 +95,7 @@ impl DynamicChunks {
             }
         }
 
-        let chunk_id = self.new_chunk(position, false);
+        let chunk_id = self.new_chunk(position);
         self.add(chunk_id, object)
     }
 
@@ -100,7 +114,7 @@ impl DynamicChunks {
         }
 
         let chunk_id = self.data.objects.chunk.remove(&id).expect("chunk not found");
-        self.chunks.get_mut(&chunk_id).expect("chunk not found").objects.remove(&id);
+        self.chunks.get_mut(&chunk_id).expect("chunk not found").chunk_data.objects.remove(&id);
         self.remove_empty_chunk(chunk_id);
 
         self.data.objects.ids.remove(id);
@@ -110,13 +124,13 @@ impl DynamicChunks {
         self.data.objects.type_.remove(&id).expect("type not found").expect("type not found")
     }
 
-    fn add(&mut self, chunk_id: u32, object: Object) -> u32 {
+    fn add(&mut self, chunk_id: u32, object: &Object) -> u32 {
         let chunk = self.chunks.get_mut(&chunk_id).expect("chunk not found");
 
         let id = self.data.objects.ids.get_id();
 
-        chunk.objects.insert(id);
-        self.data.objects.type_.insert(id, Some(object));
+        chunk.chunk_data.objects.insert(id);
+        self.data.objects.type_.insert(id, Some(object.clone()));
         self.data.objects.chunk.insert(id, chunk_id);
         self.data.objects.type_i.insert(id, 0);
         self.data.objects.payload.insert(id, [None, None]);
@@ -124,20 +138,20 @@ impl DynamicChunks {
         id
     }
 
-    fn add_loaded(&mut self, chunk_id: u32, object: Object) -> u32 {
+    fn add_loaded(&mut self, chunk_id: u32, object: &Object) -> u32 {
         let chunk = self.chunks.get_mut(&chunk_id).expect("chunk not found");
 
         let id = self.data.objects.ids.get_id();
         self.data.objects.type_.insert(id, None);
 
         let index = self.lid.objects.ids.get_id() as usize;
-        self.lid.objects.type_[index] = object;
+        self.lid.objects.type_[index] = object.clone();
 
         self.data.objects.type_i.insert(id, index);
         self.data.objects.chunk.insert(id, chunk_id);
         self.data.objects.i_type.insert(index, id);
         self.data.objects.payload.insert(id, [None, None]);
-        chunk.objects.insert(id);
+        chunk.chunk_data.objects.insert(id);
 
         id
     }
@@ -269,7 +283,7 @@ impl DynamicChunks {
         }
 
         data.objects.chunk.insert(id, chunk_id);
-        chunk.objects.insert(id);
+        chunk.chunk_data.objects.insert(id);
     }
 
     pub fn verify_model(&mut self, id: u32) {
@@ -281,36 +295,54 @@ impl DynamicChunks {
 
         let pos = [pos[0], pos[1], pos[2]];
 
-        let chunk_id = self.data.objects.chunk.get(&id).expect("chunk not found");
+        let chunk_id = self.data.objects.chunk.get(&id).expect("chunk id not found");
 
         let chunk = self.chunks.get_mut(chunk_id).expect("chunk not found");
 
-        if chunk.position[0] + self.chunks_size < pos[0]
-            || chunk.position[1] + self.chunks_size < pos[1]
-            || chunk.position[2] + self.chunks_size < pos[2]
-            || chunk.position[0] - self.chunks_size > pos[0]
-            || chunk.position[1] - self.chunks_size > pos[1]
-            || chunk.position[2] - self.chunks_size > pos[2] {
+        if !Self::is_inside_chunk(self.chunks_size, chunk, &pos) {
 
             let loaded = chunk.loaded;
-            chunk.objects.remove(&id);
+            chunk.chunk_data.objects.remove(&id);
             self.remove_empty_chunk(*chunk_id);
 
-            let nearest = self.tree.nearest_one::<SquaredEuclidean>(&pos);
-
-            if nearest.distance <= self.chunks_size * self.chunks_size {
+            if self.non_protected_tree.size() > 0 {
+                let nearest = self.non_protected_tree.nearest_one::<SquaredEuclidean>(&pos);
                 let chunk = self.chunks.get_mut(&nearest.item).expect("chunk not found");
 
-                if !chunk.private {
+                if Self::is_inside_chunk(self.chunks_size, chunk, &pos) {
+                    Self::switch_object_chunk(&mut self.data, chunk, nearest.item, id, loaded, &mut self.lid);
+                    return;
+                }
+            }
+            
+            if self.auto_tree.size() > 0 {
+                let nearest = self.auto_tree.nearest_one::<SquaredEuclidean>(&pos);
+
+                if nearest.distance <= self.chunks_size * self.chunks_size {
+                    let chunk = self.chunks.get_mut(&nearest.item).expect("chunk not found");
+
                     Self::switch_object_chunk(&mut self.data, chunk, nearest.item, id, loaded, &mut self.lid);
                     return;
                 }
             }
 
-            let chunk_id = self.new_chunk(pos, false);
+            let chunk_id = self.new_chunk(pos);
             let chunk = self.chunks.get_mut(&chunk_id).expect("chunk not found");
 
             Self::switch_object_chunk(&mut self.data, chunk, chunk_id, id, loaded, &mut self.lid);
         }
+    }
+    
+    pub fn set_object_chunk(&mut self, id: u32, chunk_id: u32) {
+        let old_chunk_id = self.data.objects.chunk.get(&id).expect("chunk id not found");
+        let chunk = self.chunks.get_mut(old_chunk_id).expect("chunk not found");
+
+        let loaded = chunk.loaded;
+        chunk.chunk_data.objects.remove(&id);
+        self.remove_empty_chunk(*old_chunk_id);
+
+        let chunk = self.chunks.get_mut(&chunk_id).expect("chunk not found");
+
+        Self::switch_object_chunk(&mut self.data, chunk, chunk_id, id, loaded, &mut self.lid);
     }
 }

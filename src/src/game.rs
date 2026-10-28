@@ -14,7 +14,7 @@ impl Game {
     }
 
     pub fn update(&mut self, update_var: &mut UpdateVar) {
-
+        
     }
 
     fn move_along_rotation(speed: &f32, rotation: &Quat, pos: &mut [f32; 3], direction: glam::Vec3) {

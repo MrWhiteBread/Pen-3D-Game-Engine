@@ -5,23 +5,52 @@ use crate::engine::back::render::selective_systems::dynamic_chunks::DynamicChunk
 use crate::engine::back::render::selective_systems::dynamic_chunks::registry::{DataRegistry, DataRegistryArray, DataRegistryPlus, LidRegistry, LidRegistryArray};
 
 impl DynamicChunks {
-    pub fn iter_add_chunks<F>(&mut self, visible_chunks: &IndexSet<u32>, mut f: F) where F: FnMut(&mut LID, &mut Chunk, &mut Data) {
-        let to_add = visible_chunks.difference(&self.lid.chunks).cloned().collect::<IndexSet<_>>();
-        self.add_chunks(to_add, &mut f);
+    pub fn add_chunk_data(lid: &mut LID, data: &mut Data, chunk: &mut Chunk) {
+        Self::iter_add_data(
+            &mut chunk.chunk_data.lights,
+            &mut data.lights,
+            &mut lid.lights,
+        );
 
-        let to_add = visible_chunks.intersection(&self.new_chunks).cloned().collect::<IndexSet<_>>();
-        self.add_chunks(to_add, &mut f);
+        Self::iter_add_data_plus(
+            &mut chunk.chunk_data.objects,
+            &mut data.objects,
+            &mut lid.objects,
+            &mut |object, payload| {
+                Self::add_object_data(
+                    object,
+                    payload,
+                    &mut data.vertices,
+                    &mut data.indices,
+                    &mut lid.vertices,
+                    &mut lid.indices
+                );
+            }
+        );
     }
 
-    fn add_chunks<F>(&mut self, to_add: IndexSet<u32>, f: &mut F) where F: FnMut(&mut LID, &mut Chunk, &mut Data) {
+    pub fn iter_add_chunks(&mut self, visible_chunks: &IndexSet<u32>) {
+        let to_add = visible_chunks.difference(&self.lid.chunks).cloned().collect::<IndexSet<_>>();
+        self.add_chunks(to_add);
+
+        let to_add = visible_chunks.intersection(&self.new_chunks).cloned().collect::<IndexSet<_>>();
+        self.add_chunks(to_add);
+    }
+
+    fn add_chunks(&mut self, to_add: IndexSet<u32>) {
         for chunk_id in &to_add {
+            let chunk = self.chunks.get_mut(chunk_id).expect("chunk not found");
+
+            if chunk.loaded {
+                continue;
+            }
+            
             self.new_chunks.swap_remove(chunk_id);
             self.lid.chunks.insert(*chunk_id);
 
-            let chunk = self.chunks.get_mut(chunk_id).expect("chunk not found");
             chunk.loaded = true;
 
-            f(&mut self.lid, chunk, &mut self.data);
+            Self::add_chunk_data(&mut self.lid, &mut self.data, chunk);
         }
     }
 

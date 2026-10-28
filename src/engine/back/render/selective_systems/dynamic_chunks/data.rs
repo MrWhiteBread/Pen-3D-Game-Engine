@@ -1,21 +1,41 @@
 use std::collections::{HashSet};
+use glam::{Quat, Vec3};
 use indexmap::IndexSet;
 use wgpu::Extent3d;
+use winit::dpi::Position;
 use crate::engine::back::render::selective_systems::dynamic_chunks::registry::{DataRegistry, DataRegistryArray, DataRegistryPlus, LidRegistry, LidRegistryArray, LidRegistryTexture};
 use crate::engine::back::render::selective_systems::fakes::{FAKE_INDEX, FAKE_LIGHT, FAKE_OBJECT, FAKE_VERTEX};
 use crate::engine::back::types::light::raw_light::LightType;
 use crate::engine::back::types::object::raw_object::Object;
 use crate::engine::back::types::vertex::Vertex;
 
-pub struct Chunk {
-    pub private: bool,
-    pub loaded: bool,
-    pub position: [f32; 3],
-
+pub struct Plane {
+    pub normal: Vec3,
+    pub d: f32,
+}
+pub struct ChunkData {
     pub lights: HashSet<u32>,
     pub objects: HashSet<u32>,
+}
 
-    pub textures: HashSet<u32>,
+pub struct ChunkRequirements {
+    pub points: Vec<[f32; 3]>,
+
+    pub radius: f32,
+    pub planes: Vec<Plane>,
+}
+
+pub struct Chunk {
+    pub manual: bool,
+    pub protected: bool,
+    pub private: bool,
+
+    pub loaded: bool,
+
+    pub position: [f32; 3],
+    pub chunk_req: Option<ChunkRequirements>,
+
+    pub chunk_data: ChunkData,
 }
 
 pub struct LID {

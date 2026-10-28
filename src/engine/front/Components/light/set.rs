@@ -2,6 +2,15 @@ use glam::{EulerRot, Quat, Vec3};
 use crate::engine::front::components::light::Light;
 
 impl Light {
+    #[track_caller]
+    pub fn set_chunk(&mut self, id: u32) {
+        if let Some(scene) = self.scene.as_mut() {
+            scene.set_light_chunk(self.id, id);
+        } else {
+            panic!("Can't set light chunk because it doesn't hold a scene")
+        }
+    }
+    
     pub fn set_rot(&mut self, rot: &[f32; 3], lerp: bool) {
         self.angle[0] = rot[0];
         self.angle[1] = rot[1];
