@@ -1,9 +1,10 @@
 use std::sync::Arc;
+use std::sync::atomic::AtomicBool;
 use arc_swap::ArcSwap;
 use wgpu::{AdapterInfo, AddressMode, Buffer, BufferAddress, BufferDescriptor, BufferUsages, Device, Extent3d, FilterMode, MipmapFilterMode, Queue, Sampler, TextureView};
 use wgpu::util::{BufferInitDescriptor, DeviceExt};
 use wgpu::wgt::SamplerDescriptor;
-use crate::engine::back::staging_buffers::StagingBuffers;
+use crate::engine::back::shared_data::{SharedData, StagingBuffers};
 use crate::engine::back::types::bone::Bone;
 use crate::engine::back::types::camera::{CameraUniform, Plane};
 use crate::engine::back::types::draw_indexed_indirect_args::DrawIndexedIndirectArgs;
@@ -35,19 +36,18 @@ pub struct Buffers {
     pub count_light_buffer: Buffer,
     pub light_ids_buffer: Buffer,
 
-    pub bone_buffer: Buffer,
-    pub bone_i_buffer: Buffer,
-
     pub object_ids_buffer: Buffer,
     pub bilinear_mip_sampler: Sampler,
 }
 
 impl Buffers {
     #[allow(unused_variables)]
-    pub fn new(device: &Device, info: &AdapterInfo, queue: Arc<Queue>, color_texture_view: TextureView, color_texture_size: Extent3d)-> (Self, StagingBuffers) {
+    pub fn new(device: &Device, info: &AdapterInfo, queue: Queue, color_texture_view: TextureView, color_texture_size: Extent3d)-> (Self, SharedData) {
         //TODO: make buffers dynamic, until then i will limit
+        let staging_count = 12;
+
         let max_lights = 1_000;
-        let max_objects = 1_000_000;
+        let max_objects = 1_500_000;
         let max_vertices = 5_000_000;
         let max_indices = 10_000_000;
         
@@ -64,7 +64,6 @@ impl Buffers {
         vram_usage += size_of::<Bone>() * max_bones * 2;
 
         println!("buffers vram usage: {} MB / {:.2} GB", vram_usage / 1_048_576, vram_usage as f64 / 1_073_741_824.0);
-
 
         let command_buffer = device.create_buffer(&BufferDescriptor {
             label: Some("GPU Draw commands array"),
@@ -95,29 +94,12 @@ impl Buffers {
             mapped_at_creation: false,
         });
 
-        let vertices_staging = device.create_buffer(&BufferDescriptor {
-            label: Some("Vertex staging"),
-            size: (size_of::<Vertex>() * max_vertices) as BufferAddress,
-            usage: BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-
-
         let indices_buffer = device.create_buffer(&BufferDescriptor {
             label: Some("Indices buffer"),
             size: (4 * max_indices) as BufferAddress,
             usage: BufferUsages::INDEX | BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
-
-        let indices_staging = device.create_buffer(&BufferDescriptor {
-            label: Some("Index staging"),
-            size: (4 * max_indices) as BufferAddress,
-            usage: BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-
-
 
 
         let globals_buffer = device.create_buffer(&BufferDescriptor {
@@ -172,13 +154,6 @@ impl Buffers {
             mapped_at_creation: false,
         });
 
-        let object_staging = device.create_buffer(&BufferDescriptor {
-            label: Some("Object staging"),
-            size: (size_of::<Object>() * max_objects) as BufferAddress,
-            usage: BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-
 
         let object_count_buffer = device.create_buffer(&BufferDescriptor {
             label: Some("Object count buffer"),
@@ -199,13 +174,6 @@ impl Buffers {
             label: Some("Light buffer"),
             size: (size_of::<LightType>() * max_lights) as BufferAddress,
             usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-        
-        let light_staging = device.create_buffer(&BufferDescriptor {
-            label: Some("Light staging"),
-            size: (size_of::<LightType>() * max_lights) as BufferAddress,
-            usage: BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
             mapped_at_creation: false,
         });
 
@@ -231,37 +199,6 @@ impl Buffers {
         });
 
 
-
-        let max_bones = 1;
-
-        let bone_buffer = device.create_buffer(&BufferDescriptor {
-            label: Some("Bone buffer"),
-            size: (size_of::<Bone>() * max_bones) as BufferAddress,
-            usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-
-        let bone_staging = device.create_buffer(&BufferDescriptor {
-            label: Some("Bone staging"),
-            size: (size_of::<Bone>() * max_bones) as BufferAddress,
-            usage: BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-
-        let bone_i_buffer = device.create_buffer(&BufferDescriptor {
-            label: Some("Bone indices buffer"),
-            size: (4 * max_indices) as BufferAddress,
-            usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-
-        let bone_i_staging = device.create_buffer(&BufferDescriptor {
-            label: Some("Bone indices staging"),
-            size: (4 * max_indices) as BufferAddress,
-            usage: BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
-            mapped_at_creation: false,
-        });
-
         let bilinear_mip_sampler = device.create_sampler(&SamplerDescriptor {
             label: Some("light rays blur sampler"),
             address_mode_u: AddressMode::ClampToEdge,
@@ -274,6 +211,58 @@ impl Buffers {
             ..Default::default()
         });
 
+        let vertices_staging = device.create_buffer(&BufferDescriptor {
+            label: Some("Vertex staging"),
+            size: (size_of::<Vertex>() * max_vertices) as BufferAddress,
+            usage: BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+
+        let indices_staging = device.create_buffer(&BufferDescriptor {
+            label: Some("Index staging"),
+            size: (4 * max_indices) as BufferAddress,
+            usage: BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
+            mapped_at_creation: false,
+        });
+
+        let mut staging_buffers = Vec::with_capacity(staging_count * 2);
+        let max_objects = max_objects / staging_count;
+        let max_lights = max_lights / staging_count;
+
+        for _ in 0..staging_count * 2 {
+            let object_staging = device.create_buffer(&BufferDescriptor {
+                label: Some("Object staging"),
+                size: (size_of::<Object>() * max_objects) as BufferAddress,
+                usage: BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
+                mapped_at_creation: false,
+            });
+
+            let light_staging = device.create_buffer(&BufferDescriptor {
+                label: Some("Light staging"),
+                size: (size_of::<LightType>() * max_lights) as BufferAddress,
+                usage: BufferUsages::COPY_SRC | BufferUsages::COPY_DST,
+                mapped_at_creation: false,
+            });
+
+            staging_buffers.push(StagingBuffers {
+
+
+                vertices_staging: vertices_staging.clone(),
+                indices_staging: indices_staging.clone(),
+                object_staging,
+                light_staging,
+
+                vertices_count: 0,
+                indices_count: 0,
+                object_count: 0,
+                light_count: 0,
+
+                vertices_dest_offset: 0,
+                indices_dest_offset: 0,
+                object_dest_offset: 0,
+                light_dest_offset: 0,
+            });
+        }
 
         (
             Self {
@@ -294,43 +283,23 @@ impl Buffers {
                 light_count_buffer,
                 count_light_buffer,
                 light_ids_buffer,
-
-                bone_buffer,
-                bone_i_buffer,
                 
                 object_ids_buffer,
                 bilinear_mip_sampler,
             },
 
-            StagingBuffers {
+            SharedData {
                 queue: queue.clone(),
                 camera_structure: camera,
-                
-                vertices_staging,
-                indices_staging,
-                object_staging,
-                light_staging,
-                bone_staging,
-                bone_i_staging,
-                
-                vertices_count: 0,
-                indices_count: 0,
-                object_count: 0,
-                light_count: 0,
-                bone_count: 0,
-                bone_i_count: 0,
-                
+
                 scene_light: 1.0,
                 old_scene_light: 1.0,
-                
-                vertices_dest_offset: 0,
-                indices_dest_offset: 0,
-                object_dest_offset: 0,
-                light_dest_offset: 0,
 
-                color_texture_view,
-                color_texture_size,
-            }
+                objects_count: 0,
+                lights_count: 0,
+
+                staging_buffers,
+            },
         )
     }
 }

@@ -1,23 +1,29 @@
+use std::mem;
 use crate::engine::back::render::scene::{Scene};
-use crate::engine::back::staging_buffers::StagingBuffers;
+use crate::engine::back::shared_data::{SharedData, StagingBuffers};
 
 pub struct Render {
     scene: Option<Scene>,
-    staging_buffers_example: StagingBuffers,
-    set_statics: bool,
+    shared_data: SharedData,
+
+    stage: bool,
+    stage1_buffers: Vec<StagingBuffers>,
+    stage2_buffers: Vec<StagingBuffers>,
 }
 
 impl Render {
-    pub fn new(staging_buffers_example: StagingBuffers) -> Self {
+    pub fn new(mut shared_data: SharedData) -> Self {
+        let mut staging_buffers = mem::take(&mut shared_data.staging_buffers);
+        let stage2_buffers = staging_buffers.split_off(staging_buffers.len() / 2);
+
         Self {
             scene: None,
-            staging_buffers_example,
-            set_statics: false,
-        }
-    }
+            shared_data,
 
-    pub fn create_scene(&mut self, chunks_size: u32) -> Scene {
-        Scene::new(self.staging_buffers_example.clone(), chunks_size as f32)
+            stage: true,
+            stage1_buffers: staging_buffers,
+            stage2_buffers,
+        }
     }
 
     pub fn update_camera(&mut self) {
@@ -27,29 +33,30 @@ impl Render {
     }
 
     pub fn set_scene(&mut self, scene: &Scene) {
-        let mut scene = scene.clone();
-        scene.set_dest_offset([0; 4]);
+        scene.loaded(true);
+
+        if let Some(scene) = self.scene.take() {
+            scene.loaded(false);
+        }
 
         self.scene = Some(scene.clone());
-        self.set_statics = true;
     }
 
-    pub fn get_staging_buffers(&self) -> Option<StagingBuffers> {
-        if self.scene.is_some() {
-            return Some(self.scene.as_ref().expect("No scene present").get_staging_buffers())
+    pub fn get_shared_data(&self) -> SharedData {
+        self.shared_data.clone()
+    }
+
+    pub fn update_staging_buffers(&mut self) {
+        if self.stage {
+            self.shared_data.staging_buffers = self.stage1_buffers.clone();
+        } else {
+            self.shared_data.staging_buffers = self.stage2_buffers.clone();
         }
-        None
-    }
 
-    pub fn setup_staging_buffers(&mut self) {
-        if self.scene.is_some() {
-            self.scene.as_mut().expect("No scene present").update_staging_buffers();
-        }
-    }
+        self.stage = !self.stage;
 
-    pub fn setup_offsets(&mut self) {
         if self.scene.is_some() {
-            self.scene.as_mut().expect("no scene").setup_offsets()
+            self.scene.as_mut().expect("No scene present").update_staging_buffers(&mut self.shared_data);
         }
     }
 }

@@ -29,7 +29,7 @@ impl Game {
 
         let camera = Camera::new(&[0.0; 3]); // create a camera with position
 
-        let mut scene = render.create_scene(8); // create a scene with chunks size
+        let scene = Scene::new(8); // create a scene with chunks size
         scene.set_camera(&camera); // set scene camera
         scene.set_scene_light(0.12, false); // set scene global light value, and disable lerp/interpolation for this change
 

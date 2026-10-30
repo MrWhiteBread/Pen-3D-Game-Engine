@@ -1,18 +1,16 @@
 use std::sync::Arc;
 use wgpu::ComputePassDescriptor;
-use crate::engine::back::staging_buffers::StagingBuffers;
+use crate::engine::back::shared_data::StagingBuffers;
 use crate::engine::back::state::State;
 
 impl<'a> State<'a> {
-    pub fn compute_pass(&mut self, encoder: &mut wgpu::CommandEncoder, staging_buffers: &Arc<StagingBuffers>) {
+    pub fn compute_pass(&mut self, encoder: &mut wgpu::CommandEncoder, objects_count: u32, lights_count: u32) {
         self.compute_once(encoder);
-        self.compute_objects(encoder, staging_buffers);
-        self.compute_lights(encoder, staging_buffers);
+        self.compute_objects(encoder, objects_count);
+        self.compute_lights(encoder, lights_count);
     }
 
-    fn compute_objects(&mut self, encoder: &mut wgpu::CommandEncoder, staging_buffers: &Arc<StagingBuffers>) {
-        let count = staging_buffers.object_count;
-
+    fn compute_objects(&mut self, encoder: &mut wgpu::CommandEncoder, count: u32) {
         if count == 0 {
             return;
         }
@@ -32,9 +30,7 @@ impl<'a> State<'a> {
         compute_pass.dispatch_workgroups(workgroups, 1, 1);
     }
 
-    fn compute_lights(&mut self, encoder: &mut wgpu::CommandEncoder, staging_buffers: &Arc<StagingBuffers>) {
-        let count = staging_buffers.light_count;
-
+    fn compute_lights(&mut self, encoder: &mut wgpu::CommandEncoder, count: u32) {
         if count == 0 {
             return;
         }

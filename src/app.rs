@@ -62,7 +62,7 @@ impl<'a> ApplicationHandler for App<'a> {
 
             let tokio_runtime = Runtime::new().expect("Could not create tokio runtime");
 
-            let (mut state, staging_buffers) = tokio_runtime.block_on(
+            let (mut state, shared_data) = tokio_runtime.block_on(
                 async {
                     State::new(window_clone, settings).await
                 }
@@ -73,7 +73,7 @@ impl<'a> ApplicationHandler for App<'a> {
             let cursor_y = state.cursor_y.clone();
             let cursor_locked = state.cursor_locked.clone();
 
-            let staging_buffers = staging_buffers.clone();
+            let shared_data = shared_data.clone();
             let globals_updated = state.globals_updated.clone();
             let ticks_updated = state.ticks_updated.clone();
             let del_timer = state.del_timer.clone();
@@ -88,8 +88,9 @@ impl<'a> ApplicationHandler for App<'a> {
             tokio_runtime.spawn_blocking( move || {
                 let run_var = RunVar{
                     time_per_update,
-                    staging_buffers,
+                    shared_data,
                     key_handler,
+                    
                     cursor_x,
                     cursor_y,
                     cursor_locked,

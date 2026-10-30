@@ -6,19 +6,19 @@ use tokio::time::Instant;
 use winit::keyboard::{Key, KeyCode, NamedKey, PhysicalKey};
 use crate::engine::back::key_handler::InputHandler;
 use crate::engine::back::render::render::Render;
-use crate::engine::back::staging_buffers::StagingBuffers;
+use crate::engine::back::shared_data::{SharedData, StagingBuffers};
 use crate::engine::front::components::camera::Camera;
 use crate::src::game::Game;
 
 pub async fn run(run_var: RunVar) {
     let time_per_update = run_var.time_per_update;
-    let staging_buffers_arc = run_var.staging_buffers.clone();
+    let shared_data = run_var.shared_data.clone();
     let globals_updated = run_var.globals_updated.clone(); // tells state to render
     let ticks_update = run_var.ticks_updated.clone(); // tells state to update buffers
     let del_timer = run_var.del_timer.clone();
 
-    let staging_buffers_cloned = (**staging_buffers_arc.load()).clone();
-    let render = Render::new(staging_buffers_cloned);
+    let shared_data_cloned = (**shared_data.load()).clone();
+    let render = Render::new(shared_data_cloned);
 
     let mut game = Game::new(render);
 
@@ -77,13 +77,9 @@ pub async fn run(run_var: RunVar) {
 
             { // update buffers
                 let render = game.get_render();
-                render.setup_staging_buffers();
-                let staging_buffers = render.get_staging_buffers();
+                render.update_staging_buffers();
 
-                if let Some(staging_buffers) = staging_buffers {
-                    staging_buffers_arc.store(Arc::new(staging_buffers));
-                    render.setup_offsets();
-                }
+                shared_data.store(Arc::new(render.get_shared_data()));
 
                 render.update_camera();
                 ticks_update.store(true, Ordering::Relaxed); // tells state to updated buffers
@@ -105,7 +101,7 @@ pub async fn run(run_var: RunVar) {
 
 pub struct RunVar {
     pub time_per_update: f64,
-    pub staging_buffers: Arc<ArcSwap<StagingBuffers>>,
+    pub shared_data: Arc<ArcSwap<SharedData>>,
     pub key_handler: Arc<ArcSwap<InputHandler>>,
     
     pub cursor_x: Arc<AtomicF32>,

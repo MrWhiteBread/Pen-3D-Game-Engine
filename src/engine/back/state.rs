@@ -19,18 +19,18 @@ use crate::engine::back::screen_textures::ScreenTextures;
 use crate::engine::back::key_handler::InputHandler;
 use crate::engine::back::pipelines::Pipelines;
 use crate::engine::back::settings::Settings;
-use crate::engine::back::staging_buffers::StagingBuffers;
+use crate::engine::back::shared_data::{SharedData, StagingBuffers};
 
 pub struct State<'a> {
     pub settings: Settings,
     buffers: Buffers,
-    staging_buffers: Arc<ArcSwap<StagingBuffers>>,
+    shared_data: Arc<ArcSwap<SharedData>>,
     pipelines: Pipelines,
     
     instance: Instance,
     surface: Surface<'a>,
     device: Device,
-    queue: Arc<Queue>,
+    queue: Queue,
     config: SurfaceConfiguration,
 
     black_vertices_buffer: Buffer,
@@ -56,14 +56,8 @@ impl<'a> State<'a> {
             label: Some("Render Encoder"),
         });
 
-
-        let staging_buffer: DynGuard<Arc<StagingBuffers>> = self.staging_buffers.load();
-
-        self.update_buffers(&mut encoder, &staging_buffer);
-        self.compute_pass(&mut encoder, &staging_buffer);
-
-        let object_count = staging_buffer.object_count.clone();
-        drop(staging_buffer);
+        let (objects_count, lights_count) = self.update_buffers(&mut encoder);
+        self.compute_pass(&mut encoder, objects_count, lights_count);
 
 
         let output = match self.surface.get_current_texture() {
@@ -84,9 +78,9 @@ impl<'a> State<'a> {
         let view = output.texture.create_view(&TextureViewDescriptor::default());
 
         if self.settings.deferred_rendering {
-            self.deferred_rendering(&mut encoder, &view, &object_count);
+            self.deferred_rendering(&mut encoder, &view, &objects_count);
         } else {
-            self.forward_rendering(&mut encoder, &view, &object_count);
+            self.forward_rendering(&mut encoder, &view, &objects_count);
         }
 
         //self.mipmap_rendering(&mut encoder, 5, &self.screen_textures.lens_flare_texture);
@@ -154,7 +148,7 @@ impl<'a> State<'a> {
         self.pipelines.remake_deferred_f_bind_group(&self.device, &self.screen_textures);
     }
     
-    pub async fn new(window: Arc<Window>, mut settings: Settings) -> (Self, Arc<ArcSwap<StagingBuffers>>) {
+    pub async fn new(window: Arc<Window>, mut settings: Settings) -> (Self, Arc<ArcSwap<SharedData>>) {
         let instance = Instance::new(InstanceDescriptor {
             backends: Backends::PRIMARY,
             ..InstanceDescriptor::new_without_display_handle()
@@ -174,18 +168,24 @@ impl<'a> State<'a> {
         println!("backend: {:?}", adapter.get_info().backend);
         println!("device: {:?}", adapter.get_info().device_type);
 
+
+        let required_limits = Limits {
+            max_storage_buffer_binding_size: adapter.limits().max_storage_buffer_binding_size,
+            max_buffer_size: adapter.limits().max_buffer_size,
+            ..Limits::default()
+        };
+
         let device_descriptor = DeviceDescriptor {
             label: Some("My Device"),
             required_features: Features::INDIRECT_FIRST_INSTANCE | Features::MULTI_DRAW_INDIRECT_COUNT | Features::TEXTURE_BINDING_ARRAY | Features::TEXTURE_FORMAT_16BIT_NORM,
-            required_limits: Limits::default(),
+            required_limits,
             experimental_features: ExperimentalFeatures::default(),
             memory_hints: MemoryHints::Performance,
             trace: Trace::default(),
         };
         
         let (device, queue) = adapter.request_device(&device_descriptor).await.expect("Can't create device");
-        let queue = Arc::new(queue);
-        
+
         let surface_caps = surface.get_capabilities(&adapter);
         let format = TextureFormat::Rgba8Unorm;
 
@@ -241,15 +241,15 @@ impl<'a> State<'a> {
         let info = adapter.get_info();
         println!("Using GPU: {} ({:?})", info.name, info.device_type);
         
-        let (buffers, staging_buffers) = Buffers::new(&device, &info, queue.clone(), global_textures.color_texture_view.clone(), global_textures.color_texture_size);
+        let (buffers, shared_data) = Buffers::new(&device, &info, queue.clone(), global_textures.color_texture_view.clone(), global_textures.color_texture_size);
         let pipelines = Pipelines::new(&device, &buffers, &config, &screen_textures);
-        let staging_buffers = Arc::new(ArcSwap::new(Arc::new(staging_buffers)));
+        let shared_data = Arc::new(ArcSwap::new(Arc::new(shared_data)));
 
         (
             Self {
                 settings,
                 buffers,
-                staging_buffers: staging_buffers.clone(),
+                shared_data: shared_data.clone(),
                 pipelines,
                 
                 instance,
@@ -274,8 +274,8 @@ impl<'a> State<'a> {
                 ticks_updated: Arc::new(AtomicBool::new(false)),
                 del_timer: Arc::new(AtomicF64::new(0.0)),
             },
-            
-            staging_buffers,
+
+            shared_data,
         )
     }
 }

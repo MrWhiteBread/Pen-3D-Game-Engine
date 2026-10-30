@@ -3,7 +3,7 @@ pub mod state;
 pub mod settings;
 mod buffers;
 mod pipelines;
-pub mod staging_buffers;
+pub mod shared_data;
 pub mod types;
 pub mod key_handler;
 mod screen_textures;

@@ -25,14 +25,14 @@ pub struct Game {
 impl Game {
     pub fn new(mut render: Render) -> Self {
         let camera = Camera::new(&[0.0, 0.0, 0.0]); // creates a camera using position
-        let mut scene = render.create_scene(5); //creates a scene using chunk size
+        let scene = Scene::new(5); //creates a scene using chunk size
 
         scene.set_camera(&camera); // sets the camera
         scene.set_default_god_dist(10); // sets the default "god" distance
         // (a god is a point in space that renders everything around it based on its distance)
 
         scene.set_scene_light(0.0, false); // sets scene light/global light to 0.0 without using interpolation/lerp
-        render.set_scene(&mut scene); // sets the scene to render
+        render.set_scene(&scene); // sets the scene to render
 
         // creates a mesh with the shape of a cuboid using size
         let mut mesh = cuboid(&[2.0, 2.0, 1.0]);
@@ -67,7 +67,7 @@ impl Game {
 
     fn move_along_rotation(speed: &f32, rotation: &Quat, pos: &mut [f32; 3], direction: glam::Vec3) {
         let direction = rotation * direction;
-        
+
         pos[0] -= direction.x * speed;
         pos[1] -= direction.y * speed;
         pos[2] -= direction.z * speed;

@@ -6,10 +6,10 @@ mod types;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use indexmap::{IndexMap, IndexSet};
 use kiddo::SquaredEuclidean;
-use wgpu::{Buffer, Extent3d, Queue};
+use wgpu::{Buffer, BufferSize, Extent3d, Queue};
 use crate::engine::back::render::selective_systems::dynamic_chunks::data::*;
 use crate::engine::back::render::selective_systems::id::{Id32};
-use crate::engine::back::staging_buffers::StagingBuffers;
+use crate::engine::back::shared_data::{SharedData, StagingBuffers};
 
 pub struct DynamicChunks {
     // lid - loaded ids (l-id)
@@ -37,7 +37,7 @@ impl DynamicChunks {
     pub fn new(chunks_size: f32) -> Self {
         let default_space = [
             1_000,
-            1_000_000,
+            1_500_000,
             5_000_000,
             10_000_000,
         ];
@@ -72,7 +72,7 @@ impl DynamicChunks {
         }
     }
 
-    pub fn set_staging(&mut self, staging_buffers: &mut StagingBuffers) {
+    pub fn set_staging(&mut self, shared_data: &mut SharedData) {
         let mut visible_chunks = IndexSet::new();
 
         for (_, god) in &self.gods {
@@ -103,20 +103,116 @@ impl DynamicChunks {
         self.iter_remove_chunks(&visible_chunks);
         self.iter_add_chunks(&visible_chunks);
 
-        fn write_data<T: bytemuck::Pod>(queue: &Queue, buffer: &Buffer, array: &Vec<T>, count: &mut u32, size: usize) {
-            queue.write_buffer(
+        fn get_size(chunk_size: &usize, remaining: &mut usize) -> usize {
+            if *remaining < *chunk_size {
+                let rem = *remaining;
+                *remaining = 0;
+
+                return rem
+            }
+
+            *remaining -= *chunk_size;
+            *chunk_size
+        }
+
+        fn write_data<T: bytemuck::Pod>(queue: &Queue, buffer: &Buffer, array: &[T], count: &mut u32, dest_offset: &mut u64, size: usize, offset: usize) {
+            let byte_size = size * size_of::<T>();
+            let byte_offset = (offset * size_of::<T>()) as u64;
+
+            if byte_size > 0 && let Some(mut view) = queue.write_buffer_with(
                 buffer,
                 0,
-                bytemuck::cast_slice(&array[..size]),
-            );
+                BufferSize::new(byte_size as u64).expect("could not create buffer size"),
+            ) {
+                view.copy_from_slice(bytemuck::cast_slice(&array[offset..size + offset]));
+            }
 
+            *dest_offset = byte_offset;
             *count = size as u32;
         }
 
-        write_data(&staging_buffers.queue, &staging_buffers.light_staging, &self.lid.lights.type_, &mut staging_buffers.light_count, self.lid.lights.ids.size());
-        write_data(&staging_buffers.queue, &staging_buffers.object_staging, &self.lid.objects.type_, &mut staging_buffers.object_count, self.lid.objects.ids.size());
-        write_data(&staging_buffers.queue, &staging_buffers.vertices_staging, &self.lid.vertices.type_, &mut staging_buffers.vertices_count, self.lid.vertices.ids.size());
-        write_data(&staging_buffers.queue, &staging_buffers.indices_staging, &self.lid.indices.type_, &mut staging_buffers.indices_count, self.lid.indices.ids.size());
+        let lights_size = self.lid.lights.ids.size();
+        let objects_size = self.lid.objects.ids.size();
+        let vertices_size = self.lid.vertices.ids.size();
+        let indices_size = self.lid.indices.ids.size();
+
+        let lights_slice = &self.lid.lights.type_;
+        let objects_slice = &self.lid.objects.type_;
+        let vertices_slice = &self.lid.vertices.type_;
+        let indices_slice = &self.lid.indices.type_;
+
+        let lights_chunk_size = lights_size.div_ceil(shared_data.staging_buffers.len());
+        let objects_chunk_size = objects_size.div_ceil(shared_data.staging_buffers.len());
+
+        let mut remaining_lights = lights_size;
+        let mut remaining_objects = objects_size;
+
+        std::thread::scope(|scope| {
+            for (i, staging_buffers) in shared_data.staging_buffers.iter_mut().enumerate() {
+                let queue = shared_data.queue.clone();
+
+                let lights_size = get_size(&lights_chunk_size, &mut remaining_lights);
+                let objects_size = get_size(&objects_chunk_size, &mut remaining_objects);
+
+                let lights_offset = i * lights_chunk_size;
+                let objects_offset = i * objects_chunk_size;
+
+                scope.spawn(move || {
+                    write_data(
+                        &queue,
+                        &staging_buffers.light_staging,
+                        lights_slice,
+
+                        &mut staging_buffers.light_count,
+                        &mut staging_buffers.light_dest_offset,
+
+                        lights_size,
+                        lights_offset
+                    );
+
+                    write_data(
+                        &queue,
+                        &staging_buffers.object_staging,
+                        objects_slice,
+
+                        &mut staging_buffers.object_count,
+                        &mut staging_buffers.object_dest_offset,
+
+                        objects_size,
+                        objects_offset
+                    );
+                });
+            }
+        });
+
+        let staging_buffers = shared_data.staging_buffers.get_mut(0).expect("no staging buffers???");
+
+        write_data(
+            &shared_data.queue,
+            &staging_buffers.vertices_staging,
+            vertices_slice,
+
+            &mut staging_buffers.vertices_count,
+            &mut staging_buffers.vertices_dest_offset,
+
+            vertices_size,
+            0,
+        );
+
+        write_data(
+            &shared_data.queue,
+            &staging_buffers.indices_staging,
+            indices_slice,
+
+            &mut staging_buffers.indices_count,
+            &mut staging_buffers.indices_dest_offset,
+
+            indices_size,
+            0
+        );
+
+        shared_data.objects_count = objects_size as u32;
+        shared_data.lights_count = lights_size as u32;
 
         self.usage.chunks_len = self.lid.chunks.len() as u32;
 
@@ -125,14 +221,14 @@ impl DynamicChunks {
         self.usage.objects_len = self.lid.objects.ids.len() as u32;
         self.usage.lights_len = self.lid.lights.ids.len() as u32;
 
-        self.usage.vertices_size = self.lid.vertices.ids.size() as u32;
-        self.usage.indices_size = self.lid.indices.ids.size() as u32;
-        self.usage.objects_size = self.lid.objects.ids.size() as u32;
-        self.usage.lights_size = self.lid.lights.ids.size() as u32;
+        self.usage.vertices_size = vertices_size as u32;
+        self.usage.indices_size = indices_size as u32;
+        self.usage.objects_size = objects_size as u32;
+        self.usage.lights_size = lights_size as u32;
 
         self.update();
     }
-    
+
     pub fn get_usage(&self) -> Usage {
         self.usage.clone()
     }
@@ -169,7 +265,7 @@ impl Usage {
             lights_size: 0,
         }
     }
-    
+
     pub fn clone(&self) -> Self {
         Self {
             chunks_len: self.chunks_len,
@@ -178,7 +274,7 @@ impl Usage {
             indices_len: self.indices_len,
             objects_len: self.objects_len,
             lights_len: self.lights_len,
-            
+
             vertices_size: self.vertices_size,
             indices_size: self.indices_size,
             objects_size: self.objects_size,
